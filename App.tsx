@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import SettingsScreen from './components/SettingsScreen';
 import LoginScreen from './components/LoginScreen';
@@ -22,6 +21,7 @@ const App: React.FC = () => {
 
   const handleChangeUrl = useCallback(() => {
     localStorage.removeItem('apiBaseUrl');
+    localStorage.removeItem('codfunc');
     setBaseUrl(null);
     setIsLoggedIn(false);
     setCurrentScreen('home');
@@ -33,6 +33,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(() => {
+    localStorage.removeItem('codfunc');
     setIsLoggedIn(false);
     setCurrentScreen('home');
   }, []);

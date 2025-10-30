@@ -5,6 +5,7 @@ export interface LoginCredentials {
 
 export interface LoginResponse {
   status: string;
+  codfunc?: number;
   // Potentially other fields like token, user info etc.
 }
 

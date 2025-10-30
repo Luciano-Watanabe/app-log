@@ -33,6 +33,12 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
     if (data.status !== 'OK') {
         throw new Error('Login failed: Invalid credentials or server error.');
     }
+    
+    if (data.codfunc) {
+      localStorage.setItem('codfunc', data.codfunc.toString());
+    } else {
+      localStorage.removeItem('codfunc');
+    }
 
     return data;
   } catch (error) {
@@ -93,7 +99,12 @@ export const createBonus = async (numtransent: number): Promise<CreateBonusRespo
     throw new Error('API Base URL is not configured.');
   }
 
-  const url = `${baseUrl}/criarbonus/${numtransent}`;
+  const codfunc = localStorage.getItem('codfunc');
+  if (!codfunc) {
+    throw new Error('Código do funcionário não encontrado. Por favor, faça login novamente.');
+  }
+
+  const url = `${baseUrl}/criarbonus/${codfunc}`;
 
   try {
     const response = await fetch(url, {
@@ -101,6 +112,7 @@ export const createBonus = async (numtransent: number): Promise<CreateBonusRespo
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ numtransent }),
     });
 
     if (!response.ok) {
