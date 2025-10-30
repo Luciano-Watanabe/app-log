@@ -1,0 +1,5 @@
+{
+  "name": "APP Logistica",
+  "description": "A web application to interact with a custom API. It starts with setting up a base URL and performing a user login. Designed for easy extension to handle various API requests like GET, POST, PUT, and PATCH.",
+  "requestFramePermissions": []
+}
