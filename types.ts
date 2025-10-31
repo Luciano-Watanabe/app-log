@@ -7,7 +7,7 @@ export interface LoginResponse {
   status: string; // Status will now contain the employee code (codfunc).
 }
 
-export type Screen = 'home' | 'createBonus' | 'checkBonus' | 'openBonusList';
+export type Screen = 'home' | 'createBonus' | 'checkBonus' | 'openBonusList' | 'storage';
 
 export interface NotaEntrada {
   codfilial: string;
@@ -42,4 +42,9 @@ export interface BonusDetails {
 export interface CheckBonusItemResponse {
   retorno: string;
   qtconferida?: number;
+}
+
+export interface Filial {
+  codfilial: string;
+  FILIAL: string;
 }

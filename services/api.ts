@@ -1,4 +1,4 @@
-import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus } from '../types';
+import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial } from '../types';
 
 const handleApiError = async (response: Response, failureMessage: string): Promise<Error> => {
     let errorDetails = `Status: ${response.status} ${response.statusText}.`;
@@ -54,7 +54,7 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
     return data;
   } catch (error) {
     if (error instanceof Error) {
-        throw new Error(`Network error or server is not reachable. Details: ${error.message}`);
+        throw error;
     }
     throw new Error('An unknown error occurred during login.');
   }
@@ -86,7 +86,7 @@ export const getNotasEntrada = async (): Promise<NotaEntrada[]> => {
 
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Network error or server is not reachable. Details: ${error.message}`);
+      throw error;
     }
     throw new Error('An unknown error occurred while fetching data.');
   }
@@ -108,7 +108,7 @@ export const createBonus = async (numtransent: number): Promise<CreateBonusRespo
   }
 
   const url = `${baseUrl}/criarbonus`;
-  const body = { numtransent: String(numtransent), codfunc: codfunc };
+  const body = { numtransent: numtransent, codfunc: codfunc };
 
   // Log the request details for debugging purposes
   console.log('Sending createBonus request:', {
@@ -144,7 +144,7 @@ export const createBonus = async (numtransent: number): Promise<CreateBonusRespo
     }
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Network error or server is not reachable. Details: ${error.message}`);
+      throw error;
     }
     throw new Error('An unknown error occurred while creating the bonus.');
   }
@@ -210,7 +210,7 @@ export const checkBonusItem = async (numbonus: number, codauxiliar: string, peso
     const url = `${baseUrl}/conferirbonus/${numbonus}`;
     const body = {
         ean: codauxiliar,
-        qtconf: String(peso)
+        qtconf: peso
     };
 
     try {
@@ -281,7 +281,7 @@ export const finalizeBonusCheck = async (numbonus: number): Promise<CreateBonusR
     const url = `${baseUrl}/conferirbonus/${numbonus}`;
     
     const body = {
-        numbonus: String(numbonus),
+        numbonus: numbonus,
         codfunc: codfunc,
     };
 
@@ -314,5 +314,24 @@ export const finalizeBonusCheck = async (numbonus: number): Promise<CreateBonusR
     } catch (error) {
         if (error instanceof Error) throw error;
         throw new Error('An unknown error occurred while finalizing bonus check.');
+    }
+};
+
+export const getFiliais = async (): Promise<Filial[]> => {
+    const baseUrl = localStorage.getItem('apiBaseUrl');
+    if (!baseUrl) throw new Error('API Base URL is not configured.');
+
+    const url = `${baseUrl}/LISTAFILIAL`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw await handleApiError(response, 'Failed to fetch filiais.');
+        }
+        const data = await response.json();
+        return data.items || [];
+    } catch (error) {
+        if (error instanceof Error) throw error;
+        throw new Error('An unknown error occurred while fetching filiais.');
     }
 };

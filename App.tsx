@@ -5,6 +5,7 @@ import HomeScreen from './components/HomeScreen';
 import CreateBonusScreen from './components/CreateBonusScreen';
 import CheckBonusScreen from './components/CheckBonusScreen';
 import OpenBonusListScreen from './components/OpenBonusListScreen';
+import StorageScreen from './components/StorageScreen';
 import { Screen } from './types';
 
 const App: React.FC = () => {
@@ -70,6 +71,8 @@ const App: React.FC = () => {
             return <OpenBonusListScreen onBack={() => handleNavigate('home')} onSelectBonus={handleBonusSelect} />;
         case 'checkBonus':
             return <CheckBonusScreen onBack={() => handleNavigate(bonusToCheck ? 'openBonusList' : 'home')} numbonus={bonusToCheck} />;
+        case 'storage':
+            return <StorageScreen onBack={() => handleNavigate('home')} />;
         default:
             return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} />;
     }
