@@ -268,3 +268,51 @@ export const cancelBonusCheck = async (numbonus: number): Promise<CreateBonusRes
         throw new Error('An unknown error occurred while canceling bonus check.');
     }
 };
+
+export const finalizeBonusCheck = async (numbonus: number): Promise<CreateBonusResponse> => {
+    const baseUrl = localStorage.getItem('apiBaseUrl');
+    if (!baseUrl) throw new Error('API Base URL is not configured.');
+
+    const codfunc = localStorage.getItem('codfunc');
+    if (!codfunc) {
+        throw new Error('Código do funcionário não encontrado. Por favor, faça login novamente.');
+    }
+
+    const url = `${baseUrl}/conferirbonus/${numbonus}`;
+    
+    const body = {
+        numbonus: String(numbonus),
+        codfunc: codfunc,
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            throw await handleApiError(response, 'Failed to finalize bonus check.');
+        }
+        
+        const responseText = await response.text();
+
+        if (!responseText) {
+            return { retorno: 'Conferência finalizada com sucesso.' };
+        }
+        
+        try {
+            const data: CreateBonusResponse = JSON.parse(responseText);
+            return data;
+        } catch (e) {
+            return { retorno: responseText };
+        }
+
+    } catch (error) {
+        if (error instanceof Error) throw error;
+        throw new Error('An unknown error occurred while finalizing bonus check.');
+    }
+};

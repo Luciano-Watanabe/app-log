@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { getBonusDetails, checkBonusItem, cancelBonusCheck } from '../services/api';
+import { getBonusDetails, checkBonusItem, cancelBonusCheck, finalizeBonusCheck } from '../services/api';
 import { BonusDetails } from '../types';
 import Spinner from './Spinner';
 
@@ -46,6 +46,8 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
   const [pesoInput, setPesoInput] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isFinalized, setIsFinalized] = useState(false);
   const [checkMessage, setCheckMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
@@ -62,6 +64,7 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
       setError(null);
       setBonusDetails(null);
       setCheckMessage(null);
+      setIsFinalized(false);
     }
 
     try {
@@ -117,6 +120,24 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
       setIsChecking(false);
     }
   };
+
+  const handleFinalizeCheck = async () => {
+    if (!bonusDetails) return;
+
+    setIsFinalizing(true);
+    setCheckMessage(null);
+    setError(null);
+    try {
+        const response = await finalizeBonusCheck(bonusDetails.numbonus);
+        setCheckMessage({ type: 'success', text: response.retorno });
+        setIsFinalized(true);
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred during finalization.';
+        setCheckMessage({ type: 'error', text: errorMessage });
+    } finally {
+        setIsFinalizing(false);
+    }
+  };
   
   const handleCancelCheck = async () => {
     if (!bonusDetails) return;
@@ -146,8 +167,11 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
     setCodauxiliarInput('');
     setPesoInput('');
     setCheckMessage(null);
+    setIsFinalized(false);
     setTimeout(() => bonusInputRef.current?.focus(), 100);
   }
+
+  const allItemsChecked = bonusDetails?.items.every(item => item.qtconferida >= item.qt);
 
   return (
     <>
@@ -204,8 +228,16 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
               </div>
               <div className="flex items-center gap-2">
                   <button 
+                      onClick={handleFinalizeCheck}
+                      disabled={!allItemsChecked || isFinalizing || isFinalized}
+                      className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white font-bold py-2 px-3 rounded-lg transition duration-300 text-sm flex items-center justify-center min-w-[120px]"
+                  >
+                      {isFinalizing ? <Spinner /> : 'Finalizar'}
+                  </button>
+                  <button 
                       onClick={() => setShowCancelConfirm(true)}
-                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg transition duration-300 text-sm flex items-center"
+                      disabled={isFinalized}
+                      className="bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed text-white font-bold py-2 px-3 rounded-lg transition duration-300 text-sm flex items-center"
                   >
                       Cancelar Conferência
                   </button>
@@ -227,6 +259,7 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
                   placeholder="Bipe o código do produto"
                   className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
+                  disabled={isFinalized}
                 />
               </div>
               <div className="md:col-span-1">
@@ -241,9 +274,10 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
                   placeholder="Peso da balança"
                   className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
+                  disabled={isFinalized}
                 />
               </div>
-              <button type="submit" disabled={isChecking} className="md:col-span-1 w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+              <button type="submit" disabled={isChecking || isFinalized} className="md:col-span-1 w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
                 {isChecking ? <Spinner /> : 'Conferir Item'}
               </button>
             </form>
