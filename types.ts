@@ -41,5 +41,5 @@ export interface BonusDetails {
 
 export interface CheckBonusItemResponse {
   retorno: string;
-  qtconferida: number;
+  qtconferida?: number;
 }

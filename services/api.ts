@@ -207,15 +207,10 @@ export const checkBonusItem = async (numbonus: number, codauxiliar: string, peso
     const baseUrl = localStorage.getItem('apiBaseUrl');
     if (!baseUrl) throw new Error('API Base URL is not configured.');
 
-    const codfunc = localStorage.getItem('codfunc');
-    if (!codfunc) throw new Error('Código do funcionário não encontrado.');
-
-    const url = `${baseUrl}/bonusconferenciaitem`;
+    const url = `${baseUrl}/conferirbonus/${numbonus}`;
     const body = {
-        numbonus: String(numbonus),
-        codauxiliar,
-        peso: String(peso),
-        codfunc
+        ean: codauxiliar,
+        qtconf: String(peso)
     };
 
     try {
@@ -235,5 +230,41 @@ export const checkBonusItem = async (numbonus: number, codauxiliar: string, peso
     } catch (error) {
         if (error instanceof Error) throw error;
         throw new Error('An unknown error occurred during item check.');
+    }
+};
+
+export const cancelBonusCheck = async (numbonus: number): Promise<CreateBonusResponse> => {
+    const baseUrl = localStorage.getItem('apiBaseUrl');
+    if (!baseUrl) throw new Error('API Base URL is not configured.');
+
+    const url = `${baseUrl}/conferirbonus/${numbonus}`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw await handleApiError(response, 'Failed to cancel bonus check.');
+        }
+        
+        const responseText = await response.text();
+
+        // Handle successful responses that have no JSON body (common for DELETE)
+        if (!responseText) {
+            return { retorno: 'Conferência cancelada com sucesso.' };
+        }
+        
+        // If there's a response body, try to parse it as JSON.
+        // If it fails, treat the plain text as the return message.
+        try {
+            return JSON.parse(responseText);
+        } catch (e) {
+            return { retorno: responseText };
+        }
+
+    } catch (error) {
+        if (error instanceof Error) throw error;
+        throw new Error('An unknown error occurred while canceling bonus check.');
     }
 };
