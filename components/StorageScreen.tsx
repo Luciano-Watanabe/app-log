@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getFiliais } from '../services/api';
-import { Filial } from '../types';
+import { getFiliais, getProdutosCheckIn } from '../services/api';
+import { Filial, ProdutoCheckIn } from '../types';
 import Spinner from './Spinner';
 
 interface StorageScreenProps {
@@ -8,42 +8,97 @@ interface StorageScreenProps {
 }
 
 const StorageScreen: React.FC<StorageScreenProps> = ({ onBack }) => {
+  const [view, setView] = useState<'SELECT_FILIAL' | 'SELECT_PRODUTOS'>('SELECT_FILIAL');
+
+  // Filial selection state
   const [filiais, setFiliais] = useState<Filial[]>([]);
   const [selectedFilial, setSelectedFilial] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const [loadingFiliais, setLoadingFiliais] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Product selection state
+  const [produtos, setProdutos] = useState<ProdutoCheckIn[]>([]);
+  const [selectedAptos, setSelectedAptos] = useState<number[]>([]);
+  const [loadingProdutos, setLoadingProdutos] = useState(false);
 
   useEffect(() => {
     const fetchFiliais = async () => {
       try {
-        setLoading(true);
+        setLoadingFiliais(true);
         setError(null);
         const data = await getFiliais();
         setFiliais(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
       } finally {
-        setLoading(false);
+        setLoadingFiliais(false);
       }
     };
     fetchFiliais();
   }, []);
 
-  const handleProceed = () => {
-    // Placeholder for next navigation step
-    if (selectedFilial) {
-      alert(`Filial selecionada: ${selectedFilial}`);
+  const handleSelectFilial = async () => {
+    if (!selectedFilial) return;
+    setLoadingProdutos(true);
+    setError(null);
+    try {
+      const data = await getProdutosCheckIn(selectedFilial);
+      if (data.length === 0) {
+        setError('Nenhum produto encontrado para armazenamento nesta filial.');
+      } else {
+        setProdutos(data);
+        setView('SELECT_PRODUTOS');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao buscar produtos.');
+    } finally {
+      setLoadingProdutos(false);
     }
   };
 
-  const renderContent = () => {
-    if (loading) {
+  const handleToggleApto = (apto_id: number) => {
+    setSelectedAptos(prev =>
+      prev.includes(apto_id)
+        ? prev.filter(id => id !== apto_id)
+        : [...prev, apto_id]
+    );
+  };
+  
+  const handleConfirmStorage = () => {
+    // Placeholder for the actual storage logic
+    alert(`Confirmado armazenamento para ${selectedAptos.length} produto(s).`);
+  };
+
+  const handleBackToFilialSelection = () => {
+    setView('SELECT_FILIAL');
+    setError(null);
+    setProdutos([]);
+    setSelectedAptos([]);
+  };
+
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
+    try {
+        // Handles formats like "4/29/2026"
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            const [month, day, year] = parts;
+            const formattedDay = day.padStart(2, '0');
+            const formattedMonth = month.padStart(2, '0');
+            return `${formattedDay}/${formattedMonth}/${year}`;
+        }
+        return dateString; // Return original if format is unexpected
+    } catch (error) {
+        return dateString; // Return original on error
+    }
+  };
+
+
+  const renderFilialSelection = () => {
+    if (loadingFiliais) {
       return <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>;
     }
-    if (error) {
-      return <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg">{error}</p>;
-    }
-    if (filiais.length === 0) {
+    if (filiais.length === 0 && !error) {
       return <p className="text-center py-8 text-gray-400">Nenhuma filial encontrada.</p>;
     }
     return (
@@ -56,7 +111,10 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack }) => {
             <select
               id="filial-select"
               value={selectedFilial}
-              onChange={(e) => setSelectedFilial(e.target.value)}
+              onChange={(e) => {
+                setSelectedFilial(e.target.value);
+                setError(null);
+              }}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10"
             >
               <option value="" disabled>Selecione uma filial...</option>
@@ -71,30 +129,76 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack }) => {
             </div>
           </div>
         </div>
+        {error && <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg mt-4">{error}</p>}
         <button
-          onClick={handleProceed}
-          disabled={!selectedFilial}
+          onClick={handleSelectFilial}
+          disabled={!selectedFilial || loadingProdutos}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center"
         >
-          Avançar
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-5 w-5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          {loadingProdutos ? <Spinner /> : 'Avançar'}
+          {!loadingProdutos && <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-5 w-5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>}
         </button>
       </div>
     );
   };
 
+  const renderProdutoSelection = () => {
+    return (
+      <div>
+         <div className="overflow-x-auto rounded-lg max-h-[60vh] pr-2">
+            <ul className="space-y-3">
+                {produtos.map(produto => (
+                    <li key={produto.apto_id}>
+                        <label htmlFor={`checkbox-produto-${produto.apto_id}`} className="w-full bg-gray-700/80 hover:bg-gray-700 p-4 rounded-lg text-left transition duration-200 flex items-center cursor-pointer">
+                            <input 
+                                id={`checkbox-produto-${produto.apto_id}`}
+                                type="checkbox"
+                                checked={selectedAptos.includes(produto.apto_id)}
+                                onChange={() => handleToggleApto(produto.apto_id)}
+                                className="w-5 h-5 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2 mr-4 flex-shrink-0"
+                            />
+                            <div>
+                                <p className="font-bold text-white">{produto.codprod} - {produto.descricao}</p>
+                                <p className="text-sm text-gray-300">Qtd: {produto.qtd} (Lote: {produto.lote} | Validade: {formatDate(produto.dtvalid)})</p>
+                            </div>
+                        </label>
+                    </li>
+                ))}
+            </ul>
+        </div>
+        <div className="mt-6">
+            <button
+                onClick={handleConfirmStorage}
+                disabled={selectedAptos.length === 0}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center"
+            >
+                Confirmar Armazenamento ({selectedAptos.length})
+            </button>
+        </div>
+      </div>
+    );
+  }
+
+  const getTitle = () => {
+    if (view === 'SELECT_FILIAL') {
+      return 'Armazenamento - Selecione a Filial';
+    }
+    const filial = filiais.find(f => f.codigo === selectedFilial);
+    return `Armazenamento - Filial ${filial?.codigo || ''}`;
+  }
+
   return (
     <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Armazenamento - Selecione a Filial</h1>
-        <button onClick={onBack} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
+        <h1 className="text-2xl font-bold text-white">{getTitle()}</h1>
+        <button onClick={view === 'SELECT_PRODUTOS' ? handleBackToFilialSelection : onBack} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
           Voltar
         </button>
       </div>
       
       <div>
-        {renderContent()}
+        {view === 'SELECT_FILIAL' ? renderFilialSelection() : renderProdutoSelection()}
       </div>
 
     </div>
