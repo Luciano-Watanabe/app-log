@@ -45,6 +45,6 @@ export interface CheckBonusItemResponse {
 }
 
 export interface Filial {
-  codfilial: string;
-  FILIAL: string;
+  codigo: string;
+  nomefilial: string;
 }

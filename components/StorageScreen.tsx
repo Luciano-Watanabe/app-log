@@ -9,6 +9,7 @@ interface StorageScreenProps {
 
 const StorageScreen: React.FC<StorageScreenProps> = ({ onBack }) => {
   const [filiais, setFiliais] = useState<Filial[]>([]);
+  const [selectedFilial, setSelectedFilial] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +29,13 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack }) => {
     fetchFiliais();
   }, []);
 
+  const handleProceed = () => {
+    // Placeholder for next navigation step
+    if (selectedFilial) {
+      alert(`Filial selecionada: ${selectedFilial}`);
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>;
@@ -39,21 +47,39 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack }) => {
       return <p className="text-center py-8 text-gray-400">Nenhuma filial encontrada.</p>;
     }
     return (
-      <ul className="space-y-3">
-        {filiais.map(filial => (
-          <li key={filial.codfilial}>
-            <button
-              // onClick={() => onSelectFilial(filial.codfilial)} // Placeholder for next step
-              className="w-full bg-gray-700/80 hover:bg-gray-700 p-4 rounded-lg text-left transition duration-200 flex justify-between items-center"
+      <div className="space-y-6">
+        <div>
+          <label htmlFor="filial-select" className="block text-sm font-medium text-gray-300 mb-2">
+            Selecione a Filial
+          </label>
+          <div className="relative">
+            <select
+              id="filial-select"
+              value={selectedFilial}
+              onChange={(e) => setSelectedFilial(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10"
             >
-              <div className="font-bold text-lg text-white">
-                {`${filial.codfilial} (${filial.FILIAL})`}
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </li>
-        ))}
-      </ul>
+              <option value="" disabled>Selecione uma filial...</option>
+              {filiais.map((filial) => (
+                <option key={filial.codigo} value={filial.codigo}>
+                  {`${filial.codigo} - ${filial.nomefilial}`}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleProceed}
+          disabled={!selectedFilial}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center"
+        >
+          Avançar
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-5 w-5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </button>
+      </div>
     );
   };
 
@@ -66,10 +92,11 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack }) => {
           Voltar
         </button>
       </div>
-
-      <div className="max-h-[60vh] overflow-y-auto pr-2">
+      
+      <div>
         {renderContent()}
       </div>
+
     </div>
   );
 };
