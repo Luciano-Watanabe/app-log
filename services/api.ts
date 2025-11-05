@@ -142,25 +142,22 @@ export const getProdutosCheckIn = async (codfilial: string): Promise<ProdutoChec
     return data.items || [];
 }
 
-export const getPedido = async (numped: string): Promise<Pedido> => {
+export const getPedidos = async (): Promise<Pedido[]> => {
     const response = await fetch(`${getBaseUrl()}/pedido`);
     if (!response.ok) throw await handleApiError(response, 'Failed to fetch order list.');
     const data = await response.json();
 
-    // The API returns a list of orders. We need to map the fields to our Pedido interface.
     const rawPedidos: any[] = data.items || [];
-    const pedidos: Pedido[] = rawPedidos.map(p => ({
+    return rawPedidos.map(p => ({
         numped: p.numped,
         data: p.data,
-        vendedor: p.nome, // Map 'nome' from API to 'vendedor'
+        vendedor: p.nome,
         cliente: p.cliente,
-        valor: p.vlatend, // Map 'vlatend' from API to 'valor'
+        valor: p.vlatend,
         posicao: p.posicao,
+        status: p.status,
+        dtinicio: p.dtinicio,
+        dtfim: p.dtfim,
+        dtfat: p.dtfat,
     }));
-    
-    const pedido = pedidos.find(p => p.numped.toString() === numped);
-    if (pedido) {
-        return pedido;
-    }
-    throw new Error('Pedido não encontrado.');
 }
