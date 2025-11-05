@@ -143,8 +143,12 @@ export const getProdutosCheckIn = async (codfilial: string): Promise<ProdutoChec
 }
 
 export const getPedido = async (numped: string): Promise<Pedido> => {
-    const response = await fetch(`${getBaseUrl()}/consultar_pedido?numped=${numped}`);
+    const response = await fetch(`${getBaseUrl()}/pedido/${numped}`);
     if (!response.ok) throw await handleApiError(response, 'Failed to fetch order details.');
-    // Assuming API returns a single object for a specific order
-    return response.json();
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+        return data.items[0];
+    }
+    // Throw a more specific error if the array is empty, which means not found.
+    throw new Error('Pedido não encontrado.');
 }
