@@ -89,4 +89,5 @@ export interface DiaADiaTarefa {
   tarefa_id: number;
   descricao: string;
   rotina: string;
+  status: string;
 }

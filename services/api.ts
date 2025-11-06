@@ -176,18 +176,34 @@ export const getEmbalagemDetails = async (ean: string): Promise<ProdutoEmbalagem
 }
 
 export const getTarefasDiaADia = async (): Promise<DiaADiaTarefa[]> => {
-    const response = await fetch(`${getBaseUrl()}/dia-a-dia`);
+    const response = await fetch(`${getBaseUrl()}/dia-a-dia/${getCodfunc()}`);
     if (!response.ok) throw await handleApiError(response, 'Falha ao buscar tarefas do dia-a-dia.');
     const data = await response.json();
     return data.items || [];
 }
 
-export const executarTarefaDiaADia = async (rotina: string): Promise<{ retorno: string }> => {
-    const response = await fetch(`${getBaseUrl()}/executar_tarefa`, {
+export const executarTarefaDiaADia = async (descricao: string, status: string): Promise<{ retorno: string }> => {
+    const response = await fetch(`${getBaseUrl()}/dia-a-dia/${getCodfunc()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rotina, codfunc: getCodfunc() }),
+        body: JSON.stringify({ descricao, status }),
     });
     if (!response.ok) throw await handleApiError(response, 'Falha ao executar a tarefa.');
-    return response.json();
+    
+    const responseText = await response.text();
+
+    // If the response body is empty, which is common for successful POST/PUT/DELETE,
+    // return a default success message as the operation was successful.
+    if (!responseText) {
+        return { retorno: 'Ação executada com sucesso.' };
+    }
+
+    try {
+        // If there is a response body, try to parse it as JSON.
+        return JSON.parse(responseText);
+    } catch (e) {
+        // If the server returns a non-empty, non-JSON response, it's an unexpected API behavior.
+        // It's better to throw an error to make it clear that the response format is wrong.
+        throw new Error(`Resposta inválida do servidor. Esperado JSON, mas recebido: ${responseText}`);
+    }
 }
