@@ -1,4 +1,4 @@
-import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido, ProdutoEmbalagem } from '../types';
+import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido, ProdutoEmbalagem, DiaADiaTarefa } from '../types';
 
 const handleApiError = async (response: Response, failureMessage: string): Promise<Error> => {
     let errorDetails = `Status: ${response.status} ${response.statusText}.`;
@@ -173,4 +173,21 @@ export const getEmbalagemDetails = async (ean: string): Promise<ProdutoEmbalagem
     const data = await response.json();
     // The response has an 'items' property which is an array
     return data.items || [];
+}
+
+export const getTarefasDiaADia = async (): Promise<DiaADiaTarefa[]> => {
+    const response = await fetch(`${getBaseUrl()}/dia-a-dia`);
+    if (!response.ok) throw await handleApiError(response, 'Falha ao buscar tarefas do dia-a-dia.');
+    const data = await response.json();
+    return data.items || [];
+}
+
+export const executarTarefaDiaADia = async (rotina: string): Promise<{ retorno: string }> => {
+    const response = await fetch(`${getBaseUrl()}/executar_tarefa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rotina, codfunc: getCodfunc() }),
+    });
+    if (!response.ok) throw await handleApiError(response, 'Falha ao executar a tarefa.');
+    return response.json();
 }

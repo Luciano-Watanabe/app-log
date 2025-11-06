@@ -8,6 +8,7 @@ import OpenBonusListScreen from './components/OpenBonusListScreen';
 import StorageScreen from './components/StorageScreen';
 import ConsultarPedidoScreen from './components/ConsultarPedidoScreen';
 import ConsultarEmbalagemScreen from './components/ConsultarEmbalagemScreen';
+import DiaADiaScreen from './components/DiaADiaScreen';
 import { Screen } from './types';
 
 const App: React.FC = () => {
@@ -79,6 +80,8 @@ const App: React.FC = () => {
             return <ConsultarPedidoScreen onBack={() => handleNavigate('home')} />;
         case 'consultarEmbalagem':
             return <ConsultarEmbalagemScreen onBack={() => handleNavigate('home')} />;
+        case 'diaADia':
+            return <DiaADiaScreen onBack={() => handleNavigate('home')} />;
         default:
             return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} />;
     }

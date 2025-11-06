@@ -100,7 +100,7 @@ const ConsultarEmbalagemScreen: React.FC<ConsultarEmbalagemScreenProps> = ({ onB
 
       <form onSubmit={handleSearch} className="space-y-4 mb-6">
         <div>
-          <label htmlFor="ean" className="block text-sm font-medium text-gray-300 mb-2">EAN do Produto</label>
+          <label htmlFor="ean" className="block text-sm font-medium text-gray-300 mb-2">EAN do Produto (EX: 7898949392033) </label>
           <input
             ref={eanInputRef}
             id="ean"

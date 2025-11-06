@@ -7,7 +7,7 @@ export interface LoginResponse {
   status: string; // Status will now contain the employee code (codfunc).
 }
 
-export type Screen = 'home' | 'createBonus' | 'checkBonus' | 'openBonusList' | 'storage' | 'consultarPedido' | 'consultarEmbalagem';
+export type Screen = 'home' | 'createBonus' | 'checkBonus' | 'openBonusList' | 'storage' | 'consultarPedido' | 'consultarEmbalagem' | 'diaADia';
 
 export interface NotaEntrada {
   codfilial: string;
@@ -83,4 +83,10 @@ export interface ProdutoEmbalagem {
   embalagem: string;
   ean_embalagem: number;
   estoque: number;
+}
+
+export interface DiaADiaTarefa {
+  tarefa_id: number;
+  descricao: string;
+  rotina: string;
 }
