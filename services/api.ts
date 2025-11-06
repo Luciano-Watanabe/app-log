@@ -1,4 +1,4 @@
-import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido } from '../types';
+import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido, ProdutoEmbalagem } from '../types';
 
 const handleApiError = async (response: Response, failureMessage: string): Promise<Error> => {
     let errorDetails = `Status: ${response.status} ${response.statusText}.`;
@@ -155,9 +155,22 @@ export const getPedidos = async (): Promise<Pedido[]> => {
         cliente: p.cliente,
         valor: p.vlatend,
         posicao: p.posicao,
-        status: p.status,
+        dtfat: p.dtfat,
         dtinicio: p.dtinicio,
         dtfim: p.dtfim,
-        dtfat: p.dtfat,
     }));
+}
+
+export const getEmbalagemDetails = async (ean: string): Promise<ProdutoEmbalagem[]> => {
+    const response = await fetch(`${getBaseUrl()}/embalagem/${ean}`);
+    if (!response.ok) {
+        if (response.status === 404) {
+            // Treat "not found" as an empty result set, not an error.
+            return [];
+        }
+        throw await handleApiError(response, 'Falha ao consultar embalagem.');
+    }
+    const data = await response.json();
+    // The response has an 'items' property which is an array
+    return data.items || [];
 }

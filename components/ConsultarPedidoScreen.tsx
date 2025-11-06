@@ -8,26 +8,27 @@ interface ConsultarPedidoScreenProps {
 }
 
 const PedidoDetailsModal: React.FC<{ pedido: Pedido; onClose: () => void }> = ({ pedido, onClose }) => {
-    const formatDate = (dateString: string) => {
+    const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
-        const datePart = dateString.split('T')[0];
-        const parts = datePart.split('-');
 
-        // Handle invalid or null-like dates (e.g., "0000-00-00")
-        if (parts.length !== 3 || parts[0] === '0000') {
-            return 'N/A';
+        // Se a data já estiver no formato DD/MM/YYYY, retorne diretamente.
+        if (dateString.includes('/')) {
+            return dateString;
         }
 
-        const [year, month, day] = parts.map(Number);
-        
-        // Create a UTC date to avoid timezone-related off-by-one errors.
-        const date = new Date(Date.UTC(year, month - 1, day));
-        
-        if (isNaN(date.getTime())) {
-            return 'Data Inválida';
+        try {
+            // Caso contrário, formate a partir do formato YYYY-MM-DD...
+            const datePart = dateString.split('T')[0];
+            const [year, month, day] = datePart.split('-');
+            if (day && month && year) {
+                return `${day}/${month}/${year}`;
+            }
+            // Se a formatação falhar, retorna a data original para inspeção.
+            return dateString;
+        } catch {
+            // Em caso de erro, retorna a data original.
+            return dateString;
         }
-        
-        return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(date);
     };
 
     const formatCurrency = (value: number) => {
@@ -47,13 +48,12 @@ const PedidoDetailsModal: React.FC<{ pedido: Pedido; onClose: () => void }> = ({
         <div className="bg-gray-900/50 p-6 rounded-lg">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-gray-300">
                 <div><strong className="text-gray-400 block">Nº Pedido:</strong> <span className="text-white font-semibold">{pedido.numped}</span></div>
-                <div><strong className="text-gray-400 block">Data:</strong> {formatDate(pedido.data)}</div>
-                <div><strong className="text-gray-400 block">Posição:</strong> {pedido.posicao}</div>
-                <div><strong className="text-gray-400 block">Data Fat.:</strong> {formatDate(pedido.dtfat || '')}</div>
-                <div><strong className="text-gray-400 block">Status:</strong> <span className="font-semibold text-yellow-300">{pedido.status}</span></div>
-                <div><strong className="text-gray-400 block">Início Separação:</strong> {formatDate(pedido.dtinicio || '')}</div>
-                <div><strong className="text-gray-400 block">Fim Separação:</strong> {formatDate(pedido.dtfim || '')}</div>
-                <div className="sm:col-span-2 pt-2 border-t border-gray-700"><strong className="text-gray-400 block">Valor:</strong> <span className="text-green-400 font-semibold">{formatCurrency(pedido.valor)}</span></div>
+                <div><strong className="text-gray-400 block">Data Emissão:</strong> {formatDate(pedido.data)}</div>
+                <div><strong className="text-gray-400 block">Status:</strong> {pedido.posicao}</div>
+                <div><strong className="text-gray-400 block">Dt. Faturamento:</strong> {formatDate(pedido.dtfat)}</div>
+                <div><strong className="text-gray-400 block">Início Separação:</strong> {formatDate(pedido.dtinicio)}</div>
+                <div><strong className="text-gray-400 block">Fim Separação:</strong> {formatDate(pedido.dtfim)}</div>
+                <div className="sm:col-span-2"><strong className="text-gray-400 block">Valor:</strong> <span className="text-green-400 font-semibold">{formatCurrency(pedido.valor)}</span></div>
                 <div className="sm:col-span-2"><strong className="text-gray-400 block">Cliente:</strong> {pedido.cliente}</div>
                 <div className="sm:col-span-2"><strong className="text-gray-400 block">Vendedor:</strong> {pedido.vendedor}</div>
             </div>
@@ -73,10 +73,24 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack })
   const [allPedidos, setAllPedidos] = useState<Pedido[]>([]);
   const [filteredPedidos, setFilteredPedidos] = useState<Pedido[]>([]);
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
+  
   const [searchInput, setSearchInput] = useState('');
-  const [selectedPosicao, setSelectedPosicao] = useState('');
+  const [positionFilter, setPositionFilter] = useState('');
+  const [salespersonFilter, setSalespersonFilter] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const positionOptions = useMemo(() => {
+    const positions = new Set(allPedidos.map(p => p.posicao).filter(Boolean));
+    return Array.from(positions).sort();
+  }, [allPedidos]);
+
+  const salespersonOptions = useMemo(() => {
+    const salespeople = new Set(allPedidos.map(p => p.vendedor).filter(Boolean));
+    return Array.from(salespeople).sort();
+  }, [allPedidos]);
+
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -95,48 +109,40 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack })
     fetchPedidos();
   }, []);
 
-  const posicoesUnicas = useMemo(() => {
-    const posicoes = allPedidos.map(p => p.posicao).filter(Boolean);
-    return [...new Set(posicoes)].sort();
-  }, [allPedidos]);
-
   useEffect(() => {
     const lowercasedFilter = searchInput.toLowerCase();
     const filtered = allPedidos.filter(pedido => {
-      const numpedMatch = pedido.numped.toString().includes(lowercasedFilter);
-      const posicaoMatch = selectedPosicao ? pedido.posicao === selectedPosicao : true;
-      return numpedMatch && posicaoMatch;
+      const matchesSearch = pedido.numped.toString().includes(lowercasedFilter);
+      const matchesPosition = positionFilter ? pedido.posicao === positionFilter : true;
+      const matchesSalesperson = salespersonFilter ? pedido.vendedor === salespersonFilter : true;
+      return matchesSearch && matchesPosition && matchesSalesperson;
     });
     setFilteredPedidos(filtered);
-  }, [searchInput, selectedPosicao, allPedidos]);
+  }, [searchInput, positionFilter, salespersonFilter, allPedidos]);
 
   const formatCurrency = (value: number) => {
     if (typeof value !== 'number') return 'N/A';
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
   
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return null;
-    const datePart = dateString.split('T')[0];
-    const parts = datePart.split('-');
+  const getStatusBadge = (posicao?: string) => {
+    if (!posicao) return null;
+    const lowerPosicao = posicao.toLowerCase();
+    let colorClasses = 'bg-gray-600 text-gray-200'; // default
 
-    // Handle invalid or null-like dates (e.g., "0000-00-00")
-    if (parts.length !== 3 || parts[0] === '0000') {
-        return null;
-    }
+    if (lowerPosicao.includes('liberado')) colorClasses = 'bg-green-600 text-white';
+    else if (lowerPosicao.includes('bloqueado')) colorClasses = 'bg-red-600 text-white';
+    else if (lowerPosicao.includes('faturado')) colorClasses = 'bg-blue-600 text-white';
+    else if (lowerPosicao.includes('pendente')) colorClasses = 'bg-yellow-500 text-yellow-900';
+    else if (lowerPosicao.includes('cancelado')) colorClasses = 'bg-red-800 text-red-100';
     
-    const [year, month, day] = parts.map(Number);
-    
-    // Create a UTC date to avoid timezone-related off-by-one errors.
-    const date = new Date(Date.UTC(year, month - 1, day));
-    
-    if (isNaN(date.getTime())) {
-        return null;
-    }
-    
-    return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(date);
+    return (
+        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colorClasses}`}>
+            {posicao}
+        </span>
+    );
   };
-  
+
   const renderContent = () => {
     if (loading) {
       return <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>;
@@ -149,35 +155,26 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack })
     }
     return (
       <ul className="space-y-3">
-        {filteredPedidos.map(pedido => {
-          const dtfatFormatted = formatDate(pedido.dtfat);
-          return (
-            <li key={pedido.numped} className="w-full bg-gray-700/80 hover:bg-gray-700 p-4 rounded-lg text-left transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex-grow">
-                <p className="font-bold text-lg text-white">Pedido: {pedido.numped}</p>
-                <p className="text-sm text-gray-300 truncate max-w-xs">{pedido.cliente}</p>
-              </div>
-              <div className="flex items-center justify-between w-full sm:w-auto">
-                  <div className="text-left sm:text-right mr-4">
-                      <p className="text-sm font-semibold text-green-400">{formatCurrency(pedido.valor)}</p>
-                      <div className="flex items-center justify-start sm:justify-end gap-2 mt-1">
-                         <p className="text-xs text-gray-400">
-                           {pedido.posicao}
-                           {dtfatFormatted && ` | ${dtfatFormatted}`}
-                         </p>
-                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">{pedido.status}</span>
-                      </div>
-                  </div>
-                  <button
-                      onClick={() => setSelectedPedido(pedido)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2 px-4 rounded-lg transition duration-200 flex-shrink-0"
-                  >
-                      Detalhes
-                  </button>
-              </div>
-            </li>
-          );
-        })}
+        {filteredPedidos.map(pedido => (
+          <li key={pedido.numped} className="w-full bg-gray-700/80 hover:bg-gray-700 p-4 rounded-lg text-left transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex-grow">
+              <p className="font-bold text-lg text-white">Pedido: {pedido.numped}</p>
+              <p className="text-sm text-gray-300 truncate max-w-xs">{pedido.cliente}</p>
+            </div>
+            <div className="flex items-center justify-between w-full sm:w-auto">
+                <div className="text-left sm:text-right mr-4">
+                    <p className="text-sm font-semibold text-green-400">{formatCurrency(pedido.valor)}</p>
+                    <div className="mt-1">{getStatusBadge(pedido.posicao)}</div>
+                </div>
+                <button
+                    onClick={() => setSelectedPedido(pedido)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2 px-4 rounded-lg transition duration-200 flex-shrink-0"
+                >
+                    Detalhes
+                </button>
+            </div>
+          </li>
+        ))}
       </ul>
     );
   };
@@ -185,7 +182,7 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack })
   return (
     <>
       {selectedPedido && <PedidoDetailsModal pedido={selectedPedido} onClose={() => setSelectedPedido(null)} />}
-      <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-3xl animate-fade-in">
+      <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-4xl animate-fade-in">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-white">Consultar Pedido</h1>
           <button onClick={onBack} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
@@ -194,7 +191,7 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack })
           </button>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="number"
             placeholder="Filtrar por número do pedido..."
@@ -203,16 +200,23 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack })
             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           />
-          <select
-            value={selectedPosicao}
-            onChange={(e) => setSelectedPosicao(e.target.value)}
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading || posicoesUnicas.length === 0}
+          <select 
+            value={positionFilter} 
+            onChange={e => setPositionFilter(e.target.value)}
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading || positionOptions.length === 0}
           >
             <option value="">Todas as Posições</option>
-            {posicoesUnicas.map(posicao => (
-              <option key={posicao} value={posicao}>{posicao}</option>
-            ))}
+            {positionOptions.map(pos => <option key={pos} value={pos}>{pos}</option>)}
+          </select>
+          <select 
+            value={salespersonFilter}
+            onChange={e => setSalespersonFilter(e.target.value)}
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading || salespersonOptions.length === 0}
+          >
+            <option value="">Todos os Vendedores</option>
+            {salespersonOptions.map(vendedor => <option key={vendedor} value={vendedor}>{vendedor}</option>)}
           </select>
         </div>
 

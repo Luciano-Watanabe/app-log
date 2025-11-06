@@ -7,6 +7,7 @@ import CheckBonusScreen from './components/CheckBonusScreen';
 import OpenBonusListScreen from './components/OpenBonusListScreen';
 import StorageScreen from './components/StorageScreen';
 import ConsultarPedidoScreen from './components/ConsultarPedidoScreen';
+import ConsultarEmbalagemScreen from './components/ConsultarEmbalagemScreen';
 import { Screen } from './types';
 
 const App: React.FC = () => {
@@ -76,6 +77,8 @@ const App: React.FC = () => {
             return <StorageScreen onBack={() => handleNavigate('home')} />;
         case 'consultarPedido':
             return <ConsultarPedidoScreen onBack={() => handleNavigate('home')} />;
+        case 'consultarEmbalagem':
+            return <ConsultarEmbalagemScreen onBack={() => handleNavigate('home')} />;
         default:
             return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} />;
     }
