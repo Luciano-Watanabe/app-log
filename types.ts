@@ -67,6 +67,7 @@ export interface Pedido {
     cliente: string;
     valor: number;
     posicao: string;
+    praca: string;
     dtfat?: string;
     dtinicio?: string;
     dtfim?: string;

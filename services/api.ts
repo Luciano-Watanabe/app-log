@@ -189,6 +189,7 @@ export const getPedidos = async (): Promise<Pedido[]> => {
         cliente: p.cliente,
         valor: p.vlatend,
         posicao: p.posicao,
+        praca: p.praca,
         dtfat: p.dtfat,
         dtinicio: p.dtinicio,
         dtfim: p.dtfim,

@@ -51,6 +51,7 @@ const PedidoDetailsModal: React.FC<{ pedido: Pedido; onClose: () => void }> = ({
                 <div><strong className="text-gray-400 block">Nº Pedido:</strong> <span className="text-white font-semibold">{pedido.numped}</span></div>
                 <div><strong className="text-gray-400 block">Data Emissão:</strong> {formatDate(pedido.data)}</div>
                 <div><strong className="text-gray-400 block">Status:</strong> {pedido.posicao}</div>
+                <div><strong className="text-gray-400 block">Praça:</strong> {pedido.praca}</div>
                 <div><strong className="text-gray-400 block">Dt. Faturamento:</strong> {formatDate(pedido.dtfat)}</div>
                 <div><strong className="text-gray-400 block">Início Separação:</strong> {formatDate(pedido.dtinicio)}</div>
                 <div><strong className="text-gray-400 block">Fim Separação:</strong> {formatDate(pedido.dtfim)}</div>
@@ -78,6 +79,7 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack, u
   const [searchInput, setSearchInput] = useState('');
   const [positionFilter, setPositionFilter] = useState('');
   const [salespersonFilter, setSalespersonFilter] = useState('');
+  const [pracaFilter, setPracaFilter] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,14 +114,16 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack, u
 
   useEffect(() => {
     const lowercasedFilter = searchInput.toLowerCase();
+    const lowercasedPracaFilter = pracaFilter.toLowerCase();
     const filtered = allPedidos.filter(pedido => {
       const matchesSearch = pedido.numped.toString().includes(lowercasedFilter);
       const matchesPosition = positionFilter ? pedido.posicao === positionFilter : true;
       const matchesSalesperson = salespersonFilter ? pedido.vendedor === salespersonFilter : true;
-      return matchesSearch && matchesPosition && matchesSalesperson;
+      const matchesPraca = pracaFilter ? (pedido.praca || '').toLowerCase().includes(lowercasedPracaFilter) : true;
+      return matchesSearch && matchesPosition && matchesSalesperson && matchesPraca;
     });
     setFilteredPedidos(filtered);
-  }, [searchInput, positionFilter, salespersonFilter, allPedidos]);
+  }, [searchInput, positionFilter, salespersonFilter, pracaFilter, allPedidos]);
 
   const formatCurrency = (value: number) => {
     if (typeof value !== 'number') return 'N/A';
@@ -159,7 +163,10 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack, u
         {filteredPedidos.map(pedido => (
           <li key={pedido.numped} className="w-full bg-gray-700/80 hover:bg-gray-700 p-4 rounded-lg text-left transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex-grow">
-              <p className="font-bold text-lg text-white">Pedido: {pedido.numped}</p>
+              <p className="font-bold text-lg text-white">
+                Pedido: {pedido.numped}
+                {pedido.praca && <span className="text-gray-400 font-normal text-base ml-2">({pedido.praca})</span>}
+              </p>
               <p className="text-sm text-gray-300 truncate max-w-xs">{pedido.cliente}</p>
             </div>
             <div className="flex items-center justify-between w-full sm:w-auto">
@@ -195,12 +202,20 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack, u
           </button>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             type="number"
-            placeholder="Filtrar por número do pedido..."
+            placeholder="Filtrar por nº do pedido..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading}
+          />
+          <input
+            type="text"
+            placeholder="Filtrar por praça..."
+            value={pracaFilter}
+            onChange={(e) => setPracaFilter(e.target.value)}
             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           />
