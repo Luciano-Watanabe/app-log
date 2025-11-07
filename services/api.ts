@@ -117,33 +117,48 @@ export const getBonusDetails = async (numbonus: string): Promise<BonusDetails> =
     };
 }
 
-export const checkBonusItem = async (numbonus: number, ean: string, qtconf: number): Promise<CheckBonusItemResponse> => {
+export const checkBonusItem = async (numbonus: number, ean: string, qtconf: number, numlote: string, dtvalidade: string): Promise<CheckBonusItemResponse> => {
+    let formattedDate = dtvalidade;
+    // The date from <input type="date"> is in 'YYYY-MM-DD' format.
+    // We convert it to 'DD/MM/YYYY' for the API.
+    if (dtvalidade && dtvalidade.includes('-')) {
+        const [year, month, day] = dtvalidade.split('-');
+        if (day && month && year) {
+            formattedDate = `${day}/${month}/${year}`;
+        }
+    }
+
     const response = await fetch(`${getBaseUrl()}/conferirbonus/${numbonus}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ean, qtconf }),
+        body: JSON.stringify({ ean, qtconf, numlote, dtvalidade: formattedDate }),
     });
     if (!response.ok) throw await handleApiError(response, 'Failed to check bonus item.');
     return response.json();
 }
 
 export const finalizeBonusCheck = async (numbonus: number): Promise<{ retorno: string }> => {
-    const response = await fetch(`${getBaseUrl()}/finalizar_conferencia`, {
-        method: 'POST',
+    const response = await fetch(`${getBaseUrl()}/conferirbonus/${numbonus}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numbonus, codfunc: getCodfunc() }),
+        body: JSON.stringify({ codfunc: getCodfunc() }),
     });
     if (!response.ok) throw await handleApiError(response, 'Failed to finalize bonus check.');
     return response.json();
 }
 
 export const cancelBonusCheck = async (numbonus: number): Promise<{ retorno: string }> => {
-    const response = await fetch(`${getBaseUrl()}/cancelar_conferencia`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numbonus, codfunc: getCodfunc() }),
+    const response = await fetch(`${getBaseUrl()}/conferirbonus/${numbonus}`, {
+        method: 'DELETE',
     });
     if (!response.ok) throw await handleApiError(response, 'Failed to cancel bonus check.');
+
+    // A successful DELETE might have no body (204 No Content)
+    if (response.status === 204) {
+        return { retorno: 'Conferência cancelada com sucesso.' };
+    }
+    
+    // Or it might have a body with a success message (e.g. 200 OK)
     return response.json();
 }
 

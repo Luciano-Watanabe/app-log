@@ -45,6 +45,8 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
 
   const [codauxiliarInput, setCodauxiliarInput] = useState('');
   const [pesoInput, setPesoInput] = useState('');
+  const [loteInput, setLoteInput] = useState('');
+  const [validadeInput, setValidadeInput] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -99,13 +101,13 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
 
   const handleCheckItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!codauxiliarInput || !pesoInput || !bonusDetails) return;
+    if (!codauxiliarInput || !pesoInput || !loteInput || !validadeInput || !bonusDetails) return;
 
     setIsChecking(true);
     setCheckMessage(null);
     try {
       const peso = parseFloat(pesoInput);
-      const response = await checkBonusItem(bonusDetails.numbonus, codauxiliarInput, peso);
+      const response = await checkBonusItem(bonusDetails.numbonus, codauxiliarInput, peso, loteInput, validadeInput);
       
       setCheckMessage({ type: 'success', text: response.retorno });
       await fetchBonusDetails(String(bonusDetails.numbonus), true);
@@ -113,6 +115,8 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
       // Reset inputs and focus for next scan
       setCodauxiliarInput('');
       setPesoInput('');
+      setLoteInput('');
+      setValidadeInput('');
       productInputRef.current?.focus();
 
     } catch (err) {
@@ -167,6 +171,8 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
     setError(null);
     setCodauxiliarInput('');
     setPesoInput('');
+    setLoteInput('');
+    setValidadeInput('');
     setCheckMessage(null);
     setIsFinalized(false);
     setTimeout(() => bonusInputRef.current?.focus(), 100);
@@ -251,7 +257,7 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
               </div>
             </div>
             
-            <form onSubmit={handleCheckItem} className="mb-6 p-4 bg-gray-700/50 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <form onSubmit={handleCheckItem} className="mb-6 p-4 bg-gray-700/50 rounded-lg grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
               <div className="md:col-span-1">
                 <label htmlFor="codauxiliar" className="block text-sm font-medium text-gray-300 mb-2">Produto (BIP)</label>
                 <input
@@ -281,8 +287,33 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
                   disabled={isFinalized}
                 />
               </div>
+              <div className="md:col-span-1">
+                <label htmlFor="lote" className="block text-sm font-medium text-gray-300 mb-2">Nº Lote</label>
+                <input
+                  id="lote"
+                  type="text"
+                  value={loteInput}
+                  onChange={(e) => setLoteInput(e.target.value)}
+                  placeholder="Número do lote"
+                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={isFinalized}
+                />
+              </div>
+              <div className="md:col-span-1">
+                <label htmlFor="validade" className="block text-sm font-medium text-gray-300 mb-2">Dt. Validade</label>
+                <input
+                  id="validade"
+                  type="date"
+                  value={validadeInput}
+                  onChange={(e) => setValidadeInput(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={isFinalized}
+                />
+              </div>
               <button type="submit" disabled={isChecking || isFinalized} className="md:col-span-1 w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
-                {isChecking ? <Spinner /> : 'Conferir Item'}
+                {isChecking ? <Spinner /> : 'Conferir'}
               </button>
             </form>
 
@@ -303,12 +334,33 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
                 </thead>
                 <tbody>
                   {bonusDetails.items.map(item => {
-                      const isComplete = (item.qtconf ?? 0) >= item.qtentrada;
+                      const qtConfValue = item.qtconf ?? 0;
+                      const qtEntradaValue = item.qtentrada;
+
+                      let rowClassName = 'bg-gray-800 hover:bg-gray-700/50';
+                      let textClassName = 'text-gray-300'; // Default for 0 (not checked)
+                      
+                      if (qtConfValue > 0) {
+                          if (qtConfValue > qtEntradaValue) {
+                              // Red: conferred > expected
+                              rowClassName = 'bg-red-800/50';
+                              textClassName = 'text-red-300';
+                          } else if (qtConfValue < qtEntradaValue) {
+                              // Yellow: 0 < conferred < expected
+                              rowClassName = 'bg-yellow-800/50';
+                              textClassName = 'text-yellow-300';
+                          } else { // qtConfValue === qtEntradaValue
+                              // Green: conferred === expected
+                              rowClassName = 'bg-green-800/50';
+                              textClassName = 'text-green-300';
+                          }
+                      }
+
                       return (
-                          <tr key={item.codprod} className={`border-b border-gray-700 ${isComplete ? 'bg-green-800/50' : 'bg-gray-800 hover:bg-gray-700/50'}`}>
-                          <td className="px-6 py-4 font-medium text-white">{item.codprod} - {item.descricao}</td>
-                          <td className="px-6 py-4 text-right">{item.qtentrada}</td>
-                          <td className={`px-6 py-4 text-right font-bold ${isComplete ? 'text-green-300' : 'text-yellow-300'}`}>{item.qtconf ?? 0}</td>
+                          <tr key={item.codprod} className={`border-b border-gray-700 ${rowClassName}`}>
+                            <td className="px-6 py-4 font-medium text-white">{item.codprod} - {item.descricao}</td>
+                            <td className="px-6 py-4 text-right">{qtEntradaValue}</td>
+                            <td className={`px-6 py-4 text-right font-bold ${textClassName}`}>{qtConfValue}</td>
                           </tr>
                       );
                   })}
