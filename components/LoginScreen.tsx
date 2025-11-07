@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { login } from '../services/api';
 import Spinner from './Spinner';
 
 interface LoginScreenProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (username: string) => void;
   onChangeUrl: () => void;
 }
 
@@ -21,7 +20,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onChangeUrl }
 
     try {
       await login({ usuario, senha });
-      onLoginSuccess();
+      onLoginSuccess(usuario);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -47,7 +46,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onChangeUrl }
             </label>
             <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
                 <input
                     id="usuario"
@@ -65,7 +64,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onChangeUrl }
             </label>
             <div className="relative">
                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 </div>
                 <input
                     id="senha"

@@ -5,9 +5,10 @@ interface HomeScreenProps {
   onLogout: () => void;
   onChangeUrl: () => void;
   onNavigate: (screen: Screen) => void;
+  username: string | null;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onLogout, onChangeUrl, onNavigate }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ onLogout, onChangeUrl, onNavigate, username }) => {
 
     const menuItems = [
         { name: 'Criar Bônus', icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8"><path d="M5 12h14"/><path d="M12 5v14"/></svg>, screen: 'createBonus' as Screen },
@@ -24,7 +25,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onLogout, onChangeUrl, onNaviga
   return (
     <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white">Painel Principal</h1>
+        <div className="flex items-center justify-center gap-x-3">
+            <h1 className="text-3xl font-bold text-white">Painel Principal</h1>
+            {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
+        </div>
         <p className="text-gray-400 mt-2">Selecione uma opção para continuar</p>
       </div>
 

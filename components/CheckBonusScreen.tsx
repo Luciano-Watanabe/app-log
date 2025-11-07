@@ -6,6 +6,7 @@ import Spinner from './Spinner';
 interface CheckBonusScreenProps {
   onBack: () => void;
   numbonus: string | null;
+  username: string | null;
 }
 
 interface ConfirmationModalProps {
@@ -36,7 +37,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ title, message, o
 );
 
 
-const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus }) => {
+const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, username }) => {
   const [numbonusInput, setNumbonusInput] = useState('');
   const [bonusDetails, setBonusDetails] = useState<BonusDetails | null>(null);
   const [loading, setLoading] = useState(false);
@@ -171,7 +172,7 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
     setTimeout(() => bonusInputRef.current?.focus(), 100);
   }
 
-  const allItemsChecked = bonusDetails?.items.every(item => item.qtconferida >= item.qt);
+  const allItemsChecked = bonusDetails?.items.every(item => (item.qtconf ?? 0) >= item.qtentrada);
 
   return (
     <>
@@ -188,7 +189,10 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
       )}
       <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full animate-fade-in">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Conferência de Bônus</h1>
+            <div className="flex items-center gap-x-3">
+                <h1 className="text-2xl font-bold text-white">Conferência de Bônus</h1>
+                {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
+            </div>
           <button onClick={onBack} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
             Voltar
@@ -299,12 +303,12 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus })
                 </thead>
                 <tbody>
                   {bonusDetails.items.map(item => {
-                      const isComplete = item.qtconferida >= item.qt;
+                      const isComplete = (item.qtconf ?? 0) >= item.qtentrada;
                       return (
                           <tr key={item.codprod} className={`border-b border-gray-700 ${isComplete ? 'bg-green-800/50' : 'bg-gray-800 hover:bg-gray-700/50'}`}>
-                          <td className="px-6 py-4 font-medium text-white">{item.codprod} - {item.produto}</td>
-                          <td className="px-6 py-4 text-right">{item.qt}</td>
-                          <td className={`px-6 py-4 text-right font-bold ${isComplete ? 'text-green-300' : 'text-yellow-300'}`}>{item.qtconferida}</td>
+                          <td className="px-6 py-4 font-medium text-white">{item.codprod} - {item.descricao}</td>
+                          <td className="px-6 py-4 text-right">{item.qtentrada}</td>
+                          <td className={`px-6 py-4 text-right font-bold ${isComplete ? 'text-green-300' : 'text-yellow-300'}`}>{item.qtconf ?? 0}</td>
                           </tr>
                       );
                   })}

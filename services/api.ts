@@ -22,12 +22,16 @@ const getBaseUrl = (): string => {
     return baseUrl;
 }
 
-const getCodfunc = (): string => {
-    const codfunc = localStorage.getItem('codfunc');
-    if (!codfunc) {
+const getCodfunc = (): number => {
+    const codfuncStr = localStorage.getItem('codfunc');
+    if (!codfuncStr) {
         throw new Error('User code (codfunc) not found. Please log in again.');
     }
-    return codfunc;
+    const codfuncNum = Number(codfuncStr);
+    if (isNaN(codfuncNum)) {
+        throw new Error(`Stored user code (codfunc) is not a valid number: "${codfuncStr}". Please log in again.`);
+    }
+    return codfuncNum;
 }
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
@@ -47,29 +51,34 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
 
     const data: LoginResponse = await response.json();
     if (data && data.status) {
-        // Assuming status contains the employee code (codfunc)
-        localStorage.setItem('codfunc', data.status);
+        const codfunc = Number(data.status);
+        if (!isNaN(codfunc) && codfunc > 0) {
+            localStorage.setItem('codfunc', data.status);
+        } else {
+            // Treat status "0" or non-numeric as a failed login, even with a 200 OK response.
+            throw new Error('Usuário ou senha inválidos.');
+        }
     } else {
         throw new Error('Login response did not contain a valid status (codfunc).');
     }
     return data;
   } catch (error) {
     if (error instanceof Error) {
-        throw new Error(`Network or other error during login: ${error.message}`);
+        throw error;
     }
     throw new Error('An unknown error occurred during login.');
   }
 };
 
 export const getNotasEntrada = async (): Promise<NotaEntrada[]> => {
-    const response = await fetch(`${getBaseUrl()}/notas_entrada?codfunc=${getCodfunc()}`);
+    const response = await fetch(`${getBaseUrl()}/notaentrada/?codfunc=${getCodfunc()}`);
     if (!response.ok) throw await handleApiError(response, 'Failed to fetch entry notes.');
     const data = await response.json();
     return data.items || [];
 }
 
 export const createBonus = async (numtransent: number): Promise<{ retorno: string }> => {
-    const response = await fetch(`${getBaseUrl()}/criar_bonus`, {
+    const response = await fetch(`${getBaseUrl()}/criarbonus`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numtransent, codfunc: getCodfunc() }),
@@ -80,7 +89,7 @@ export const createBonus = async (numtransent: number): Promise<{ retorno: strin
 
 export const getOpenBonuses = async (numbonus?: string): Promise<OpenBonus[]> => {
     const url = new URL(`${getBaseUrl()}/bonus_abertos`);
-    url.searchParams.append('codfunc', getCodfunc());
+    url.searchParams.append('codfunc', String(getCodfunc()));
     if (numbonus) {
         url.searchParams.append('numbonus', numbonus);
     }
@@ -91,18 +100,28 @@ export const getOpenBonuses = async (numbonus?: string): Promise<OpenBonus[]> =>
 }
 
 export const getBonusDetails = async (numbonus: string): Promise<BonusDetails> => {
-    const response = await fetch(`${getBaseUrl()}/bonus_detalhes?numbonus=${numbonus}&codfunc=${getCodfunc()}`);
+    const response = await fetch(`${getBaseUrl()}/conferirbonus/${numbonus}`);
     if (!response.ok) throw await handleApiError(response, 'Failed to fetch bonus details.');
     const data = await response.json();
-    // API returns a single object, not in an 'items' array.
-    return data;
+    
+    if (!data || !data.items) {
+        return { numbonus: Number(numbonus), items: [] };
+    }
+    
+    // The top-level numbonus can be taken from the first item or the input string.
+    const bonusNumber = data.items.length > 0 ? data.items[0].numbonus : Number(numbonus);
+    
+    return {
+        numbonus: bonusNumber,
+        items: data.items,
+    };
 }
 
-export const checkBonusItem = async (numbonus: number, codauxiliar: string, qt: number): Promise<CheckBonusItemResponse> => {
-    const response = await fetch(`${getBaseUrl()}/conferir_item`, {
+export const checkBonusItem = async (numbonus: number, ean: string, qtconf: number): Promise<CheckBonusItemResponse> => {
+    const response = await fetch(`${getBaseUrl()}/conferirbonus/${numbonus}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numbonus, codauxiliar, qt, codfunc: getCodfunc() }),
+        body: JSON.stringify({ ean, qtconf }),
     });
     if (!response.ok) throw await handleApiError(response, 'Failed to check bonus item.');
     return response.json();

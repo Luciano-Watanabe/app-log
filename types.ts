@@ -28,9 +28,9 @@ export interface OpenBonus {
 // Interfaces for Bonus Checking
 export interface BonusItem {
   codprod: number;
-  produto: string;
-  qt: number;
-  qtconferida: number;
+  descricao: string;
+  qtentrada: number;
+  qtconf: number | null;
   codauxiliar?: string;
 }
 

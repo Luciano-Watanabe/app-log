@@ -5,6 +5,7 @@ import Spinner from './Spinner';
 
 interface ConsultarPedidoScreenProps {
   onBack: () => void;
+  username: string | null;
 }
 
 const PedidoDetailsModal: React.FC<{ pedido: Pedido; onClose: () => void }> = ({ pedido, onClose }) => {
@@ -69,7 +70,7 @@ const PedidoDetailsModal: React.FC<{ pedido: Pedido; onClose: () => void }> = ({
 };
 
 
-const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack }) => {
+const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack, username }) => {
   const [allPedidos, setAllPedidos] = useState<Pedido[]>([]);
   const [filteredPedidos, setFilteredPedidos] = useState<Pedido[]>([]);
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
@@ -184,7 +185,10 @@ const ConsultarPedidoScreen: React.FC<ConsultarPedidoScreenProps> = ({ onBack })
       {selectedPedido && <PedidoDetailsModal pedido={selectedPedido} onClose={() => setSelectedPedido(null)} />}
       <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-4xl animate-fade-in">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Consultar Pedido</h1>
+            <div className="flex items-center gap-x-3">
+                <h1 className="text-2xl font-bold text-white">Consultar Pedido</h1>
+                {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
+            </div>
           <button onClick={onBack} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
             Voltar

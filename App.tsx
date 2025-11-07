@@ -13,7 +13,8 @@ import { Screen } from './types';
 
 const App: React.FC = () => {
   const [baseUrl, setBaseUrl] = useState<string | null>(() => localStorage.getItem('apiBaseUrl'));
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState<string | null>(() => localStorage.getItem('username'));
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('codfunc') && !!localStorage.getItem('username'));
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [bonusToCheck, setBonusToCheck] = useState<string | null>(null);
 
@@ -29,18 +30,24 @@ const App: React.FC = () => {
   const handleChangeUrl = useCallback(() => {
     localStorage.removeItem('apiBaseUrl');
     localStorage.removeItem('codfunc');
+    localStorage.removeItem('username');
     setBaseUrl(null);
+    setUsername(null);
     setIsLoggedIn(false);
     setCurrentScreen('home');
   }, []);
 
-  const handleLoginSuccess = useCallback(() => {
+  const handleLoginSuccess = useCallback((user: string) => {
+    localStorage.setItem('username', user);
+    setUsername(user);
     setIsLoggedIn(true);
     setCurrentScreen('home');
   }, []);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('codfunc');
+    localStorage.removeItem('username');
+    setUsername(null);
     setIsLoggedIn(false);
     setCurrentScreen('home');
   }, []);
@@ -67,23 +74,23 @@ const App: React.FC = () => {
     
     switch (currentScreen) {
         case 'home':
-            return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} />;
+            return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} username={username} />;
         case 'createBonus':
-            return <CreateBonusScreen onBack={() => handleNavigate('home')} />;
+            return <CreateBonusScreen onBack={() => handleNavigate('home')} username={username} />;
         case 'openBonusList':
-            return <OpenBonusListScreen onBack={() => handleNavigate('home')} onSelectBonus={handleBonusSelect} />;
+            return <OpenBonusListScreen onBack={() => handleNavigate('home')} onSelectBonus={handleBonusSelect} username={username} />;
         case 'checkBonus':
-            return <CheckBonusScreen onBack={() => handleNavigate(bonusToCheck ? 'openBonusList' : 'home')} numbonus={bonusToCheck} />;
+            return <CheckBonusScreen onBack={() => handleNavigate(bonusToCheck ? 'openBonusList' : 'home')} numbonus={bonusToCheck} username={username} />;
         case 'storage':
-            return <StorageScreen onBack={() => handleNavigate('home')} />;
+            return <StorageScreen onBack={() => handleNavigate('home')} username={username} />;
         case 'consultarPedido':
-            return <ConsultarPedidoScreen onBack={() => handleNavigate('home')} />;
+            return <ConsultarPedidoScreen onBack={() => handleNavigate('home')} username={username} />;
         case 'consultarEmbalagem':
-            return <ConsultarEmbalagemScreen onBack={() => handleNavigate('home')} />;
+            return <ConsultarEmbalagemScreen onBack={() => handleNavigate('home')} username={username} />;
         case 'diaADia':
-            return <DiaADiaScreen onBack={() => handleNavigate('home')} />;
+            return <DiaADiaScreen onBack={() => handleNavigate('home')} username={username} />;
         default:
-            return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} />;
+            return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} username={username} />;
     }
   };
 
