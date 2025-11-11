@@ -23,7 +23,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onLogout, onChangeUrl, onNaviga
 
 
   return (
-    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in">
+    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full h-full flex flex-col animate-fade-in">
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-x-3">
             <h1 className="text-3xl font-bold text-white">Painel Principal</h1>
@@ -32,7 +32,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onLogout, onChangeUrl, onNaviga
         <p className="text-gray-400 mt-2">Selecione uma opção para continuar</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+      <div className="flex-grow grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-y-auto pr-2 pb-4">
         {menuItems.map((item) => (
             <button
                 key={item.name}
@@ -47,7 +47,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onLogout, onChangeUrl, onNaviga
         ))}
       </div>
       
-      <div className="border-t border-gray-700 pt-6 space-y-4">
+      <div className="border-t border-gray-700 pt-6 space-y-4 flex-shrink-0">
         <button
           onClick={onLogout}
           className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center"

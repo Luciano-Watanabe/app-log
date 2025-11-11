@@ -193,8 +193,8 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
           cancelText="Voltar"
         />
       )}
-      <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full animate-fade-in">
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full h-full flex flex-col animate-fade-in">
+        <div className="flex justify-between items-center mb-6 flex-shrink-0">
             <div className="flex items-center gap-x-3">
                 <h1 className="text-2xl font-bold text-white">Conferência de Bônus</h1>
                 {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
@@ -206,32 +206,34 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
         </div>
 
         {!bonusDetails && !loading ? (
-          <form onSubmit={handleFetchBonus} className="space-y-4">
-            <div>
-              <label htmlFor="numbonus" className="block text-sm font-medium text-gray-300 mb-2">Número do Bônus</label>
-              <input
-                ref={bonusInputRef}
-                id="numbonus"
-                type="number"
-                value={numbonusInput}
-                onChange={(e) => setNumbonusInput(e.target.value)}
-                placeholder="Digite ou bipe o número do bônus"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
-              {loading ? <Spinner /> : 'Buscar Bônus'}
-            </button>
-            {error && <p className="text-red-400 text-center bg-red-900/20 p-3 rounded-lg">{error}</p>}
-          </form>
+          <div className="flex-grow flex items-center justify-center">
+            <form onSubmit={handleFetchBonus} className="space-y-4 w-full max-w-md">
+              <div>
+                <label htmlFor="numbonus" className="block text-sm font-medium text-gray-300 mb-2">Número do Bônus</label>
+                <input
+                  ref={bonusInputRef}
+                  id="numbonus"
+                  type="number"
+                  value={numbonusInput}
+                  onChange={(e) => setNumbonusInput(e.target.value)}
+                  placeholder="Digite ou bipe o número do bônus"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                {loading ? <Spinner /> : 'Buscar Bônus'}
+              </button>
+              {error && <p className="text-red-400 text-center bg-red-900/20 p-3 rounded-lg">{error}</p>}
+            </form>
+          </div>
         ) : null}
 
-        {loading && <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>}
+        {loading && <div className="flex-grow flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>}
 
         {bonusDetails ? (
-          <div>
-            <div className="mb-6 p-4 bg-gray-900/50 rounded-lg flex flex-wrap justify-between items-center gap-4">
+          <div className="flex flex-col flex-grow min-h-0">
+            <div className="mb-6 p-4 bg-gray-900/50 rounded-lg flex flex-wrap justify-between items-center gap-4 flex-shrink-0">
               <div>
                   <p className="text-sm text-gray-400">Bônus</p>
                   <p className="text-2xl font-bold text-white">{bonusDetails.numbonus}</p>
@@ -257,7 +259,7 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
               </div>
             </div>
             
-            <form onSubmit={handleCheckItem} className="mb-6 p-4 bg-gray-700/50 rounded-lg grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <form onSubmit={handleCheckItem} className="mb-6 p-4 bg-gray-700/50 rounded-lg grid grid-cols-1 md:grid-cols-5 gap-4 items-end flex-shrink-0">
               <div className="md:col-span-1">
                 <label htmlFor="codauxiliar" className="block text-sm font-medium text-gray-300 mb-2">Produto (BIP)</label>
                 <input
@@ -318,14 +320,14 @@ const CheckBonusScreen: React.FC<CheckBonusScreenProps> = ({ onBack, numbonus, u
             </form>
 
             {checkMessage && (
-              <div className={`p-3 rounded-md text-sm text-center mb-4 ${checkMessage.type === 'success' ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'}`}>
+              <div className={`p-3 rounded-md text-sm text-center mb-4 flex-shrink-0 ${checkMessage.type === 'success' ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'}`}>
                 {checkMessage.text}
               </div>
             )}
 
-            <div className="overflow-x-auto rounded-lg max-h-96">
+            <div className="flex-grow overflow-auto rounded-lg">
               <table className="w-full text-sm text-left text-gray-300">
-                <thead className="text-xs text-gray-400 uppercase bg-gray-700 sticky top-0">
+                <thead className="text-xs text-gray-400 uppercase bg-gray-700 sticky top-0 z-10">
                   <tr>
                     <th scope="col" className="px-6 py-3">Produto</th>
                     <th scope="col" className="px-6 py-3 text-right">Qtd. Prevista</th>

@@ -50,13 +50,13 @@ const OpenBonusListScreen: React.FC<OpenBonusListScreenProps> = ({ onBack, onSel
 
   const renderContent = () => {
     if (loading) {
-      return <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>;
+      return <div className="flex justify-center items-center p-8 flex-grow"><Spinner className="w-10 h-10" /></div>;
     }
     if (error) {
-      return <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg">{error}</p>;
+      return <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg flex-grow flex items-center justify-center">{error}</p>;
     }
     if (bonuses.length === 0) {
-      return <p className="text-center py-8 text-gray-400">Nenhum bônus em aberto encontrado.</p>;
+      return <p className="text-center py-8 text-gray-400 flex-grow flex items-center justify-center">Nenhum bônus em aberto encontrado.</p>;
     }
     return (
       <ul className="space-y-3">
@@ -82,8 +82,8 @@ const OpenBonusListScreen: React.FC<OpenBonusListScreenProps> = ({ onBack, onSel
   };
 
   return (
-    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full h-full flex flex-col animate-fade-in">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex items-center gap-x-3">
             <h1 className="text-2xl font-bold text-white">Conferir Bônus</h1>
             {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
@@ -94,7 +94,7 @@ const OpenBonusListScreen: React.FC<OpenBonusListScreenProps> = ({ onBack, onSel
         </button>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="mb-6 flex gap-2">
+      <form onSubmit={handleSearchSubmit} className="mb-6 flex gap-2 flex-shrink-0">
         <input
           type="number"
           placeholder="Pesquisar por número do bônus..."
@@ -107,7 +107,7 @@ const OpenBonusListScreen: React.FC<OpenBonusListScreenProps> = ({ onBack, onSel
         </button>
       </form>
       
-      <div className="max-h-[60vh] overflow-y-auto pr-2">
+      <div className="flex-grow overflow-y-auto pr-2">
         {renderContent()}
       </div>
     </div>

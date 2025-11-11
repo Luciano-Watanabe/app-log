@@ -41,13 +41,13 @@ const ConsultarEmbalagemScreen: React.FC<ConsultarEmbalagemScreenProps> = ({ onB
 
   const renderResult = () => {
     if (loading) {
-      return <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>;
+      return <div className="flex justify-center items-center p-8 flex-grow"><Spinner className="w-10 h-10" /></div>;
     }
     if (error) {
-      return <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg">{error}</p>;
+      return <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg flex-grow flex items-center justify-center">{error}</p>;
     }
     if (searched && produtos.length === 0 && !loading) {
-      return <p className="text-gray-400 text-center p-4">Nenhum produto encontrado para este EAN.</p>;
+      return <p className="text-gray-400 text-center p-4 flex-grow flex items-center justify-center">Nenhum produto encontrado para este EAN.</p>;
     }
     if (produtos.length > 0) {
       return (
@@ -86,12 +86,12 @@ const ConsultarEmbalagemScreen: React.FC<ConsultarEmbalagemScreenProps> = ({ onB
         </div>
       );
     }
-    return null;
+    return <div className="flex-grow"></div>; // Placeholder to take up space when no search is performed
   };
 
   return (
-    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full h-full flex flex-col animate-fade-in">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex items-center gap-x-3">
             <h1 className="text-2xl font-bold text-white">Consultar Embalagem</h1>
             {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
@@ -102,7 +102,7 @@ const ConsultarEmbalagemScreen: React.FC<ConsultarEmbalagemScreenProps> = ({ onB
         </button>
       </div>
 
-      <form onSubmit={handleSearch} className="space-y-4 mb-6">
+      <form onSubmit={handleSearch} className="space-y-4 mb-6 flex-shrink-0">
         <div>
           <label htmlFor="ean" className="block text-sm font-medium text-gray-300 mb-2">EAN do Produto (EX: 7898949392033) </label>
           <input
@@ -121,7 +121,7 @@ const ConsultarEmbalagemScreen: React.FC<ConsultarEmbalagemScreenProps> = ({ onB
         </button>
       </form>
 
-      <div className="min-h-[200px]">
+      <div className="flex-grow overflow-y-auto pr-2 flex flex-col">
         {renderResult()}
       </div>
     </div>

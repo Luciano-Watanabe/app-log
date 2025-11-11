@@ -177,74 +177,76 @@ const CreateBonusScreen: React.FC<CreateBonusScreenProps> = ({ onBack, username 
 
   const renderTableContent = () => {
     if (loading) {
-        return <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>;
+        return <div className="flex justify-center items-center p-8 flex-grow"><Spinner className="w-10 h-10" /></div>;
     }
     if (error) {
-        return <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg">{error}</p>;
+        return <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg flex-grow flex items-center justify-center">{error}</p>;
     }
     
     const hasActiveFilters = filterNumnota.trim() || filterFornecedor.trim() || filterStartDate || filterEndDate;
 
     if (!hasActiveFilters) {
-        return <p className="text-center py-8 text-gray-400">Utilize os filtros para buscar as notas de entrada.</p>;
+        return <p className="text-center py-8 text-gray-400 flex-grow flex items-center justify-center">Utilize os filtros para buscar as notas de entrada.</p>;
     }
     
     if (filteredNotas.length === 0) {
-        return <p className="text-center py-8 text-gray-400">Nenhuma nota encontrada com os filtros aplicados.</p>;
+        return <p className="text-center py-8 text-gray-400 flex-grow flex items-center justify-center">Nenhuma nota encontrada com os filtros aplicados.</p>;
     }
 
     return (
-      <table className="w-full text-sm text-left text-gray-300">
-        <thead className="text-xs text-gray-400 uppercase bg-gray-700">
-          <tr>
-            <th scope="col" className="p-4">
-              <div className="flex items-center">
-                <input 
-                    id="checkbox-all" 
-                    type="checkbox" 
-                    onChange={handleSelectAll}
-                    checked={filteredNotas.length > 0 && selectedNotas.length === filteredNotas.length}
-                    disabled={filteredNotas.length === 0}
-                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2" 
-                />
-                <label htmlFor="checkbox-all" className="sr-only">checkbox</label>
-              </div>
-            </th>
-            <th scope="col" className="px-6 py-3">Filial</th>
-            <th scope="col" className="px-6 py-3">Nº Nota</th>
-            <th scope="col" className="px-6 py-3">Dt. Entrada</th>
-            <th scope="col" className="px-6 py-3">Fornecedor</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredNotas.map(nota => (
-            <tr key={nota.numtransent} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
-              <td className="w-4 p-4">
+      <div className="overflow-auto rounded-lg">
+        <table className="w-full text-sm text-left text-gray-300">
+          <thead className="text-xs text-gray-400 uppercase bg-gray-700 sticky top-0 z-10">
+            <tr>
+              <th scope="col" className="p-4">
                 <div className="flex items-center">
                   <input 
-                      id={`checkbox-table-${nota.numtransent}`} 
+                      id="checkbox-all" 
                       type="checkbox" 
-                      checked={selectedNotas.includes(nota.numtransent)}
-                      onChange={() => handleSelectNota(nota.numtransent)}
-                      className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2"
+                      onChange={handleSelectAll}
+                      checked={filteredNotas.length > 0 && selectedNotas.length === filteredNotas.length}
+                      disabled={filteredNotas.length === 0}
+                      className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2" 
                   />
-                  <label htmlFor={`checkbox-table-${nota.numtransent}`} className="sr-only">checkbox</label>
+                  <label htmlFor="checkbox-all" className="sr-only">checkbox</label>
                 </div>
-              </td>
-              <td className="px-6 py-4">{nota.codfilial}</td>
-              <td className="px-6 py-4">{nota.numnota}</td>
-              <td className="px-6 py-4">{formatDate(nota.dtent)}</td>
-              <td className="px-6 py-4 font-medium text-white">{nota.fornecedor}</td>
+              </th>
+              <th scope="col" className="px-6 py-3">Filial</th>
+              <th scope="col" className="px-6 py-3">Nº Nota</th>
+              <th scope="col" className="px-6 py-3">Dt. Entrada</th>
+              <th scope="col" className="px-6 py-3">Fornecedor</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredNotas.map(nota => (
+              <tr key={nota.numtransent} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
+                <td className="w-4 p-4">
+                  <div className="flex items-center">
+                    <input 
+                        id={`checkbox-table-${nota.numtransent}`} 
+                        type="checkbox" 
+                        checked={selectedNotas.includes(nota.numtransent)}
+                        onChange={() => handleSelectNota(nota.numtransent)}
+                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600 ring-offset-gray-800 focus:ring-2"
+                    />
+                    <label htmlFor={`checkbox-table-${nota.numtransent}`} className="sr-only">checkbox</label>
+                  </div>
+                </td>
+                <td className="px-6 py-4">{nota.codfilial}</td>
+                <td className="px-6 py-4">{nota.numnota}</td>
+                <td className="px-6 py-4">{formatDate(nota.dtent)}</td>
+                <td className="px-6 py-4 font-medium text-white">{nota.fornecedor}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
   return (
-    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full animate-fade-in">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full h-full flex flex-col animate-fade-in">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex items-center gap-x-3">
             <h1 className="text-2xl font-bold text-white">Criar Bônus - Notas de Entrada</h1>
             {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
@@ -255,7 +257,7 @@ const CreateBonusScreen: React.FC<CreateBonusScreenProps> = ({ onBack, username 
         </button>
       </div>
 
-      <div className="mb-6 p-4 bg-gray-900/50 rounded-lg space-y-4">
+      <div className="mb-6 p-4 bg-gray-900/50 rounded-lg space-y-4 flex-shrink-0">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label htmlFor="filter-numnota" className="block text-sm font-medium text-gray-300 mb-2">Nº da Nota</label>
@@ -338,7 +340,7 @@ const CreateBonusScreen: React.FC<CreateBonusScreenProps> = ({ onBack, username 
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg">
+      <div className="flex-grow flex flex-col relative">
         {renderTableContent()}
       </div>
     </div>

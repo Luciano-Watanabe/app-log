@@ -142,14 +142,14 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
 
   const renderFilialSelection = () => {
     if (loadingFiliais || loadingDetalhe) {
-      return <div className="flex justify-center items-center p-8"><Spinner className="w-10 h-10" /></div>;
+      return <div className="flex justify-center items-center p-8 flex-grow"><Spinner className="w-10 h-10" /></div>;
     }
     if (filiais.length === 0 && !error) {
-      return <p className="text-center py-8 text-gray-400">Nenhuma filial encontrada.</p>;
+      return <p className="text-center py-8 text-gray-400 flex-grow flex items-center justify-center">Nenhuma filial encontrada.</p>;
     }
     return (
-      <>
-        <div className="space-y-6">
+      <div className="flex flex-col flex-grow min-h-0">
+        <div className="space-y-6 flex-shrink-0">
             <div>
             <label htmlFor="filial-select" className="block text-sm font-medium text-gray-300 mb-2">
                 Selecione a Filial
@@ -176,7 +176,7 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
                 </div>
             </div>
             </div>
-            {error && <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg mt-4">{error}</p>}
+            {error && !selectedFilial && <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg mt-4">{error}</p>}
             <button
             onClick={handleSelectFilial}
             disabled={!selectedFilial || loadingProdutos}
@@ -187,34 +187,40 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
             </button>
         </div>
 
-        <div className="mt-8">
-            <h2 className="text-xl font-bold text-white mb-4 border-t border-gray-700 pt-6">Armazenamentos em Execução</h2>
+        <div className="mt-8 flex flex-col flex-grow min-h-0">
+            <h2 className="text-xl font-bold text-white mb-4 border-t border-gray-700 pt-6 flex-shrink-0">Armazenamentos em Execução</h2>
             {loadingArmazenamentos ? (
-              <div className="flex justify-center items-center p-4"><Spinner /></div>
+              <div className="flex justify-center items-center p-4 flex-grow"><Spinner /></div>
             ) : armazenamentos.length > 0 ? (
-              <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                {armazenamentos.map(item => (
-                  <li key={item.id}>
-                    <button onClick={() => handleViewArmazenamento(item)} className="w-full bg-gray-700/80 hover:bg-gray-700 p-4 rounded-lg text-left transition duration-200 flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-lg text-white capitalize">{(item.acao || '').toLowerCase()} #{item.id}</p>
-                          <p className="text-sm text-gray-300">Usuário: {item.nome_guerra}</p>
-                        </div>
-                        <div className="text-right">
-                           <p className="text-sm text-gray-400">{formatDate(item.dt_criacao)}</p>
-                           <span className={`px-2 py-1 mt-1 inline-block text-xs font-semibold rounded-full ${item.status === 0 ? 'bg-yellow-500 text-yellow-900' : 'bg-gray-600 text-gray-200'}`}>
-                            {item.status === 0 ? 'Em execução' : `Status: ${item.status}`}
-                          </span>
-                        </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : !error ? (
-              <p className="text-center py-4 text-gray-400">Nenhum armazenamento em execução encontrado.</p>
-            ) : null }
+              <div className="flex-grow overflow-y-auto pr-2">
+                <ul className="space-y-3">
+                  {armazenamentos.map(item => (
+                    <li key={item.id}>
+                      <button onClick={() => handleViewArmazenamento(item)} className="w-full bg-gray-700/80 hover:bg-gray-700 p-4 rounded-lg text-left transition duration-200 flex justify-between items-center">
+                          <div>
+                            <p className="font-bold text-lg text-white capitalize">{(item.acao || '').toLowerCase()} #{item.id}</p>
+                            <p className="text-sm text-gray-300">Usuário: {item.nome_guerra}</p>
+                          </div>
+                          <div className="text-right">
+                             <p className="text-sm text-gray-400">{formatDate(item.dt_criacao)}</p>
+                             <span className={`px-2 py-1 mt-1 inline-block text-xs font-semibold rounded-full ${item.status === 0 ? 'bg-yellow-500 text-yellow-900' : 'bg-gray-600 text-gray-200'}`}>
+                              {item.status === 0 ? 'Em execução' : `Status: ${item.status}`}
+                            </span>
+                          </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : error && selectedFilial ? (
+                 <p className="text-red-400 text-center bg-red-900/20 p-4 rounded-lg mt-4 flex-grow flex items-center justify-center">{error}</p>
+            ) : (
+                <div className="text-center py-4 text-gray-400 flex-grow flex items-center justify-center">
+                    <p>Nenhum armazenamento em execução encontrado.</p>
+                </div>
+            ) }
         </div>
-      </>
+      </div>
     );
   };
 
@@ -231,8 +237,8 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
     };
 
     return (
-      <div>
-         <div className="mb-4 flex justify-end">
+      <div className="flex flex-col flex-grow min-h-0">
+         <div className="mb-4 flex justify-end flex-shrink-0">
             <button
                 onClick={handleSelectAllToggle}
                 disabled={produtos.length === 0}
@@ -241,7 +247,7 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
                 {areAllSelected ? 'Desmarcar Todos' : 'Marcar Todos'}
             </button>
          </div>
-         <div className="overflow-x-auto rounded-lg max-h-[55vh] pr-2">
+         <div className="flex-grow overflow-y-auto pr-2">
             <ul className="space-y-3">
                 {produtos.map(produto => {
                     const uniqueId = makeUniqueId(produto);
@@ -264,7 +270,7 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
                 })}
             </ul>
         </div>
-        <div className="mt-6">
+        <div className="mt-6 flex-shrink-0">
             <button
                 onClick={handleConfirmStorage}
                 disabled={selectedProducts.length === 0}
@@ -348,8 +354,8 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
   }
 
   return (
-    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl w-full h-full flex flex-col animate-fade-in">
+      <div className="flex justify-between items-center mb-6 flex-shrink-0">
         <div className="flex items-center gap-x-3">
             <h1 className="text-2xl font-bold text-white">{getTitle()}</h1>
             {username && <span className="px-3 py-1 text-sm font-semibold text-blue-300 bg-blue-900/50 rounded-full">{username}</span>}
@@ -360,7 +366,7 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
         </button>
       </div>
       
-      <div>
+      <div className="flex-grow flex flex-col min-h-0">
         {view === 'SELECT_FILIAL' && renderFilialSelection()}
         {view === 'SELECT_PRODUTOS' && renderProdutoSelection()}
         {view === 'VIEW_ARMAZENAMENTO' && renderArmazenamentoDetalhe()}
