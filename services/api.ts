@@ -1,4 +1,4 @@
-import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido, ProdutoEmbalagem, DiaADiaTarefa, ArmazenamentoExecucao, ArmazenamentoDetalhe, TempoDeVidaItem, RelatorioDiaADiaItem } from '../types';
+import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido, ProdutoEmbalagem, DiaADiaTarefa, ArmazenamentoExecucao, ArmazenamentoDetalhe, AddItemToStoragePayload, TempoDeVidaItem, RelatorioDiaADiaItem } from '../types';
 
 const handleApiError = async (response: Response, failureMessage: string): Promise<Error> => {
     let errorDetails = `Status: ${response.status} ${response.statusText}.`;
@@ -250,11 +250,23 @@ export const getArmazenamentosEmExecucao = async (): Promise<ArmazenamentoExecuc
     return data.items || [];
 }
 
-export const getArmazenamentoDetalhe = async (id: number): Promise<ArmazenamentoDetalhe> => {
+export const getArmazenamentoDetalhe = async (id: number): Promise<ArmazenamentoDetalhe[]> => {
     const response = await fetch(`${getBaseUrl()}/armazenar/lista/${id}`);
     if (!response.ok) throw await handleApiError(response, 'Falha ao buscar detalhes do armazenamento.');
     const data = await response.json();
-    return data;
+    // API can return {"items": [...]} or just [...]
+    return data.items || (Array.isArray(data) ? data : []);
+}
+
+export const addItemToStorage = async (id: number, payload: AddItemToStoragePayload): Promise<{ retorno: string }> => {
+    const response = await fetch(`${getBaseUrl()}/armazenar/lista/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw await handleApiError(response, 'Falha ao adicionar item ao armazenamento.');
+    const data = await response.json();
+    return data || { retorno: 'Item adicionado com sucesso.' };
 }
 
 export const getTempoDeVida = async (): Promise<TempoDeVidaItem[]> => {

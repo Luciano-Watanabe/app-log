@@ -119,6 +119,13 @@ export interface ArmazenamentoDetalhe {
   dtvalid: string;
 }
 
+export interface AddItemToStoragePayload {
+  ean: string;
+  qtd: number;
+  endereco: string;
+  codfunc: number;
+}
+
 export interface TempoDeVidaItem {
   codprod: number;
   descricao: string;

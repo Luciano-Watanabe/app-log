@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getFiliais, getProdutosCheckIn, getArmazenamentosEmExecucao, getArmazenamentoDetalhe } from '../services/api';
+import { getFiliais, getProdutosCheckIn, getArmazenamentosEmExecucao, getArmazenamentoDetalhe, addItemToStorage } from '../services/api';
 import { Filial, ProdutoCheckIn, ArmazenamentoExecucao, ArmazenamentoDetalhe } from '../types';
 import Spinner from './Spinner';
 
@@ -24,8 +24,13 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
   const [loadingArmazenamentos, setLoadingArmazenamentos] = useState(true);
 
   // Armazenamento detail view state
-  const [viewedArmazenamento, setViewedArmazenamento] = useState<{ detalhe: ArmazenamentoDetalhe; nome_guerra: string } | null>(null);
+  const [viewedArmazenamento, setViewedArmazenamento] = useState<{ detalhes: ArmazenamentoDetalhe[]; originalItem: ArmazenamentoExecucao } | null>(null);
   const [loadingDetalhe, setLoadingDetalhe] = useState(false);
+  const [newItemEan, setNewItemEan] = useState('');
+  const [newItemQtd, setNewItemQtd] = useState('');
+  const [newItemEndereco, setNewItemEndereco] = useState('');
+  const [isAddingItem, setIsAddingItem] = useState(false);
+  const [addItemMessage, setAddItemMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
 
   // Product selection state
@@ -77,17 +82,22 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
     }
   };
 
-  const handleViewArmazenamento = async (item: ArmazenamentoExecucao) => {
-    setLoadingDetalhe(true);
+  const handleViewArmazenamento = async (item: ArmazenamentoExecucao, isRefresh = false) => {
+    if (!isRefresh) {
+        setLoadingDetalhe(true);
+    }
     setError(null);
+    setAddItemMessage(null); // Clear message on new view or refresh
     try {
-      const detalhe = await getArmazenamentoDetalhe(item.id);
-      setViewedArmazenamento({ detalhe, nome_guerra: item.nome_guerra });
+      const detalhes = await getArmazenamentoDetalhe(item.id);
+      setViewedArmazenamento({ detalhes, originalItem: item });
       setView('VIEW_ARMAZENAMENTO');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao carregar detalhes do armazenamento.');
     } finally {
-      setLoadingDetalhe(false);
+      if (!isRefresh) {
+          setLoadingDetalhe(false);
+      }
     }
   };
 
@@ -116,23 +126,51 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
     setProdutos([]);
     setSelectedProducts([]);
     setViewedArmazenamento(null);
+    setAddItemMessage(null);
   };
+
+  const handleAddItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!viewedArmazenamento || !newItemEan || !newItemQtd || !newItemEndereco) return;
+
+    setIsAddingItem(true);
+    setAddItemMessage(null);
+    try {
+        const codfunc = Number(localStorage.getItem('codfunc') || '0');
+        const payload = {
+            ean: newItemEan,
+            qtd: Number(newItemQtd),
+            endereco: newItemEndereco,
+            codfunc,
+        };
+        const response = await addItemToStorage(viewedArmazenamento.originalItem.id, payload);
+        setAddItemMessage({ type: 'success', text: response.retorno });
+        
+        // Clear inputs and refresh data
+        setNewItemEan('');
+        setNewItemQtd('');
+        setNewItemEndereco('');
+        await handleViewArmazenamento(viewedArmazenamento.originalItem, true); // Silent refresh
+    } catch (err) {
+        setAddItemMessage({ type: 'error', text: err instanceof Error ? err.message : 'Ocorreu um erro.' });
+    } finally {
+        setIsAddingItem(false);
+    }
+  };
+
 
   const formatDate = (dateString: string): string => {
     if (!dateString) return '';
-    // This function handles both 'MM/DD/YYYY' and 'YYYY-MM-DD...' formats
+    // If it's already in DD/MM/YYYY format, return as is.
+    if (dateString.includes('/')) {
+      return dateString;
+    }
+    // Handle ISO date format (YYYY-MM-DDTHH:mm:ss)
     try {
       if (dateString.includes('T')) {
           const datePart = dateString.split('T')[0];
           const [year, month, day] = datePart.split('-');
           return `${day}/${month}/${year}`;
-      }
-      if (dateString.includes('/')) {
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-            const [month, day, year] = parts;
-            return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-        }
       }
       return dateString;
     } catch (error) {
@@ -285,7 +323,7 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
 
   const renderArmazenamentoDetalhe = () => {
     if (!viewedArmazenamento) return null;
-    const { detalhe, nome_guerra } = viewedArmazenamento;
+    const { detalhes, originalItem } = viewedArmazenamento;
 
     const getStatusInfo = (status: number) => {
         if (status === 0) {
@@ -294,22 +332,23 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
         return { text: `Status ${status}`, className: 'bg-gray-600 text-gray-200' };
     };
 
-    const statusInfo = getStatusInfo(detalhe.status);
+    const statusInfo = getStatusInfo(originalItem.status);
 
     return (
-        <div className="bg-gray-900/50 p-6 rounded-lg animate-fade-in">
-             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 text-gray-300">
+      <div className="flex flex-col flex-grow min-h-0">
+        <div className="bg-gray-900/50 p-6 rounded-lg animate-fade-in mb-6 flex-shrink-0">
+             <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-gray-300">
                 <div>
                   <strong className="text-gray-400 block">ID:</strong>
-                  <span className="text-white font-semibold">#{detalhe.id}</span>
+                  <span className="text-white font-semibold">#{originalItem.id}</span>
                 </div>
                  <div>
                   <strong className="text-gray-400 block">Ação:</strong>
-                  <span className="text-white font-semibold capitalize">{(detalhe.acao || '').toLowerCase()}</span>
+                  <span className="text-white font-semibold capitalize">{(originalItem.acao || '').toLowerCase()}</span>
                 </div>
                 <div>
                   <strong className="text-gray-400 block">Usuário:</strong>
-                  <span className="text-white font-semibold">{nome_guerra}</span>
+                  <span className="text-white font-semibold">{originalItem.nome_guerra}</span>
                 </div>
                 <div>
                   <strong className="text-gray-400 block">Status:</strong>
@@ -317,29 +356,87 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
                       {statusInfo.text}
                   </span>
                 </div>
-                <div>
-                  <strong className="text-gray-400 block">Cód. Produto:</strong>
-                  <span className="text-white font-semibold">{detalhe.codprod}</span>
-                </div>
-                <div>
-                  <strong className="text-gray-400 block">Quantidade:</strong>
-                  <span className="text-white font-semibold">{detalhe.qtd}</span>
-                </div>
-                <div>
-                  <strong className="text-gray-400 block">End. Origem:</strong>
-                  <span className="text-white font-semibold">{detalhe.end_orig}</span>
-                </div>
-                <div>
-                  <strong className="text-gray-400 block">Lote:</strong>
-                  <span className="text-white font-semibold">{detalhe.lote}</span>
-                </div>
-                 <div>
-                  <strong className="text-gray-400 block">Validade:</strong>
-                  <span className="text-white font-semibold">{formatDate(detalhe.dtvalid)}</span>
-                </div>
              </div>
         </div>
-    )
+        
+        <form onSubmit={handleAddItem} className="mb-6 p-4 bg-gray-700/50 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4 items-end flex-shrink-0">
+            <div>
+                <label htmlFor="item-ean" className="block text-sm font-medium text-gray-300 mb-2">EAN</label>
+                <input
+                  id="item-ean"
+                  type="text"
+                  value={newItemEan}
+                  onChange={(e) => setNewItemEan(e.target.value)}
+                  placeholder="Bipe o EAN"
+                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+            </div>
+            <div>
+                <label htmlFor="item-qtd" className="block text-sm font-medium text-gray-300 mb-2">Qtd</label>
+                <input
+                  id="item-qtd"
+                  type="number"
+                  value={newItemQtd}
+                  onChange={(e) => setNewItemQtd(e.target.value)}
+                  placeholder="Quantidade"
+                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+            </div>
+            <div>
+                <label htmlFor="item-endereco" className="block text-sm font-medium text-gray-300 mb-2">Endereço</label>
+                <input
+                  id="item-endereco"
+                  type="text"
+                  value={newItemEndereco}
+                  onChange={(e) => setNewItemEndereco(e.target.value)}
+                  placeholder="Endereço de destino"
+                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+            </div>
+            <button type="submit" disabled={isAddingItem} className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                {isAddingItem ? <Spinner /> : 'Adicionar'}
+            </button>
+        </form>
+
+        {addItemMessage && (
+            <div className={`p-3 rounded-md text-sm text-center mb-4 flex-shrink-0 ${addItemMessage.type === 'success' ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'}`}>
+                {addItemMessage.text}
+            </div>
+        )}
+
+        {detalhes.length > 0 ? (
+          <div className="overflow-auto rounded-lg flex-grow">
+            <table className="w-full text-sm text-left text-gray-300">
+              <thead className="text-xs text-gray-400 uppercase bg-gray-700 sticky top-0 z-10">
+                <tr>
+                  <th scope="col" className="px-6 py-3">Cód. Produto</th>
+                  <th scope="col" className="px-6 py-3">Qtd</th>
+                  <th scope="col" className="px-6 py-3">End. Origem</th>
+                  <th scope="col" className="px-6 py-3">Lote</th>
+                  <th scope="col" className="px-6 py-3">Validade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {detalhes.map((detalhe, index) => (
+                  <tr key={`${detalhe.id}-${detalhe.codprod}-${index}`} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
+                    <td className="px-6 py-4 font-medium text-white">{detalhe.codprod}</td>
+                    <td className="px-6 py-4">{detalhe.qtd}</td>
+                    <td className="px-6 py-4">{detalhe.end_orig}</td>
+                    <td className="px-6 py-4">{detalhe.lote}</td>
+                    <td className="px-6 py-4">{formatDate(detalhe.dtvalid)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center py-8 text-gray-400 flex-grow flex items-center justify-center">Nenhum item encontrado para este armazenamento.</p>
+        )}
+      </div>
+    );
   }
 
   const getTitle = () => {
@@ -347,7 +444,7 @@ const StorageScreen: React.FC<StorageScreenProps> = ({ onBack, username }) => {
       return 'Armazenamento - Selecione a Filial';
     }
     if (view === 'VIEW_ARMAZENAMENTO' && viewedArmazenamento) {
-        return `Detalhe Armazenamento #${viewedArmazenamento.detalhe.id}`;
+        return `Detalhe Armazenamento #${viewedArmazenamento.originalItem.id}`;
     }
     const filial = filiais.find(f => f.codigo === selectedFilial);
     return `Armazenamento - Filial ${filial?.codigo || ''}`;
