@@ -1,4 +1,4 @@
-import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido, ProdutoEmbalagem, DiaADiaTarefa } from '../types';
+import { LoginCredentials, LoginResponse, NotaEntrada, BonusDetails, CheckBonusItemResponse, OpenBonus, Filial, ProdutoCheckIn, Pedido, ProdutoEmbalagem, DiaADiaTarefa, ArmazenamentoExecucao, ArmazenamentoDetalhe, TempoDeVidaItem, RelatorioDiaADiaItem } from '../types';
 
 const handleApiError = async (response: Response, failureMessage: string): Promise<Error> => {
     let errorDetails = `Status: ${response.status} ${response.statusText}.`;
@@ -241,4 +241,32 @@ export const executarTarefaDiaADia = async (descricao: string, status: string): 
         // It's better to throw an error to make it clear that the response format is wrong.
         throw new Error(`Resposta inválida do servidor. Esperado JSON, mas recebido: ${responseText}`);
     }
+}
+
+export const getArmazenamentosEmExecucao = async (): Promise<ArmazenamentoExecucao[]> => {
+    const response = await fetch(`${getBaseUrl()}/armazenar/lista?codfunc=${getCodfunc()}`);
+    if (!response.ok) throw await handleApiError(response, 'Falha ao buscar armazenamentos em execução.');
+    const data = await response.json();
+    return data.items || [];
+}
+
+export const getArmazenamentoDetalhe = async (id: number): Promise<ArmazenamentoDetalhe> => {
+    const response = await fetch(`${getBaseUrl()}/armazenar/lista/${id}`);
+    if (!response.ok) throw await handleApiError(response, 'Falha ao buscar detalhes do armazenamento.');
+    const data = await response.json();
+    return data;
+}
+
+export const getTempoDeVida = async (): Promise<TempoDeVidaItem[]> => {
+    const response = await fetch(`${getBaseUrl()}/relatorio/tempodevida`);
+    if (!response.ok) throw await handleApiError(response, 'Falha ao buscar relatório de tempo de vida.');
+    const data = await response.json();
+    return data.items || [];
+}
+
+export const getRelatorioDiaADia = async (): Promise<RelatorioDiaADiaItem[]> => {
+    const response = await fetch(`${getBaseUrl()}/relatorio/dia-a-dia`);
+    if (!response.ok) throw await handleApiError(response, 'Falha ao buscar relatório do dia-a-dia.');
+    const data = await response.json();
+    return data.items || [];
 }

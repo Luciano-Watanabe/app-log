@@ -9,6 +9,7 @@ import StorageScreen from './components/StorageScreen';
 import ConsultarPedidoScreen from './components/ConsultarPedidoScreen';
 import ConsultarEmbalagemScreen from './components/ConsultarEmbalagemScreen';
 import DiaADiaScreen from './components/DiaADiaScreen';
+import RelatoriosScreen from './components/RelatoriosScreen'; // Importa a nova tela
 import { Screen } from './types';
 
 const App: React.FC = () => {
@@ -89,6 +90,8 @@ const App: React.FC = () => {
             return <ConsultarEmbalagemScreen onBack={() => handleNavigate('home')} username={username} />;
         case 'diaADia':
             return <DiaADiaScreen onBack={() => handleNavigate('home')} username={username} />;
+        case 'relatorios': // Adiciona o case para a nova tela
+            return <RelatoriosScreen onBack={() => handleNavigate('home')} username={username} />;
         default:
             return <HomeScreen onLogout={handleLogout} onChangeUrl={handleChangeUrl} onNavigate={handleNavigate} username={username} />;
     }

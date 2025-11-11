@@ -7,7 +7,7 @@ export interface LoginResponse {
   status: string; // Status will now contain the employee code (codfunc).
 }
 
-export type Screen = 'home' | 'createBonus' | 'checkBonus' | 'openBonusList' | 'storage' | 'consultarPedido' | 'consultarEmbalagem' | 'diaADia';
+export type Screen = 'home' | 'createBonus' | 'checkBonus' | 'openBonusList' | 'storage' | 'consultarPedido' | 'consultarEmbalagem' | 'diaADia' | 'relatorios';
 
 export interface NotaEntrada {
   codfilial: string;
@@ -91,4 +91,46 @@ export interface DiaADiaTarefa {
   descricao: string;
   rotina: string;
   status: string;
+}
+
+export interface ArmazenamentoExecucao {
+  id: number;
+  dt_criacao: string;
+  coduser: number;
+  nome_guerra: string;
+  dt_inicio: string | null;
+  dt_fim: string | null;
+  acao: string;
+  status: number;
+}
+
+export interface ArmazenamentoDetalhe {
+  id: number;
+  dt_criacao: string;
+  coduser: number;
+  dt_inicio: string | null;
+  dt_fim: string | null;
+  acao: string;
+  status: number;
+  codprod: number;
+  qtd: number;
+  end_orig: number;
+  lote: string;
+  dtvalid: string;
+}
+
+export interface TempoDeVidaItem {
+  codprod: number;
+  descricao: string;
+  dias_restantes: number;
+  dtvalid: string;
+  lote: string;
+  apto_id: string;
+  qtd: number;
+}
+
+export interface RelatorioDiaADiaItem {
+  descricao: string;
+  nome_guerra: string;
+  total_minutos: number;
 }
